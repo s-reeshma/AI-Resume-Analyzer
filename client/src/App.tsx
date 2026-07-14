@@ -58,8 +58,9 @@ function App() {
       formData.append("file", file);
       formData.append("role", targetRole);
 
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
       const res = await axios.post(
-        "http://127.0.0.1:8000/api/upload/",
+        `${backendUrl}/api/upload/`,
         formData
       );
 

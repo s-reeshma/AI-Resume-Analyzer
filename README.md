@@ -151,6 +151,12 @@ venv\Scripts\activate
 # macOS/Linux:
 source venv/bin/activate
 
+# Create local environment configuration from the example
+# Windows:
+copy .env.example .env
+# macOS/Linux:
+cp .env.example .env
+
 # Install dependencies
 pip install -r requirements.txt
 
@@ -169,6 +175,12 @@ The API server starts on: `http://127.0.0.1:8000/`
 ```bash
 # Open a new terminal instance and navigate to client directory
 cd client
+
+# Create local environment configuration from the example
+# Windows:
+copy .env.example .env
+# macOS/Linux:
+cp .env.example .env
 
 # Install packages
 npm install

@@ -1,13 +1,14 @@
 from pathlib import Path
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = 'django-insecure-s1j^wm#yot7&7i6+1%v&ju9ex%-!8rz320$89x3(7nx4m%e2tb'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-s1j^wm#yot7&7i6+1%v&ju9ex%-!8rz320$89x3(7nx4m%e2tb')
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if host.strip()]
 
 
 # Application definition
