@@ -6,9 +6,16 @@ import { AtsScore } from "./AtsScore";
 type Theme = "light" | "dark";
 
 function getInitialTheme(): Theme {
-  const saved = localStorage.getItem("theme");
-  if (saved === "light" || saved === "dark") return saved;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  try {
+    const saved = localStorage.getItem("theme");
+    if (saved === "light" || saved === "dark") return saved;
+    if (typeof window !== "undefined" && window.matchMedia) {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+  } catch {
+    // localStorage / matchMedia can throw in restricted privacy modes
+  }
+  return "light";
 }
 
 function App() {
@@ -28,7 +35,11 @@ function App() {
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
+    try {
+      localStorage.setItem("theme", theme);
+    } catch {
+      // persistence is best-effort; ignore if storage is unavailable
+    }
   }, [theme]);
 
   const toggleTheme = () => {
@@ -80,9 +91,11 @@ function App() {
     <div className="container mt-5">
       <div className="main-card text-center">
         <button
+          type="button"
           className="theme-toggle-btn"
           onClick={toggleTheme}
-          aria-label="Toggle dark mode"
+          aria-label="Toggle theme"
+          aria-pressed={theme === "dark"}
         >
           {theme === "light" ? "🌙 Dark Mode" : "☀️ Light Mode"}
         </button>
