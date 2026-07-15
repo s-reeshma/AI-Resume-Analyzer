@@ -37,6 +37,7 @@ function App() {
   const [missingSkills, setMissingSkills] = useState<string[]>([]);
   const [showAllSkills, setShowAllSkills] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [analysisSource, setAnalysisSource] = useState<"sample" | "upload" | null>(null);
 
   // Auth
   const { user, signup, login, logout } = useAuth();
@@ -90,16 +91,12 @@ function App() {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
-  const uploadResume = async () => {
-    if (!file) {
-      alert("Please upload resume");
-      return;
-    }
-
+  const runAnalysis = async (fileToAnalyze: File, source: "sample" | "upload") => {
     try {
-      setLoading(true);   
+      setLoading(true);
+      setAnalysisSource(source);
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", fileToAnalyze);
       formData.append("role", targetRole);
 
       const headers = user ? { Authorization: `Bearer ${user.token}` } : {};
@@ -110,6 +107,37 @@ function App() {
       setSuggestions(res.data.suggestions);
       setMatchedSkills(res.data.matched_skills || []);
       setMissingSkills(res.data.missing_skills || []);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      alert(source === "sample" ? "Sample analysis failed" : "Upload failed");
+      setLoading(false);
+    }
+  };
+
+  const uploadResume = async () => {
+    if (!file) {
+      alert("Please upload resume");
+      return;
+    }
+    await runAnalysis(file, "upload");
+  };
+
+  const handleSampleResume = async () => {
+    try {
+      setLoading(true);
+      setAnalysisSource("sample");
+      const response = await fetch("/sample-resume.pdf");
+      if (!response.ok) {
+        throw new Error("Failed to load sample resume PDF");
+      }
+      const blob = await response.blob();
+      const sampleFile = new File([blob], "sample-resume.pdf", { type: "application/pdf" });
+      await runAnalysis(sampleFile, "sample");
+    } catch (error) {
+      console.error(error);
+      alert("Could not load sample resume");
+      setLoading(false);
       setActiveFileName(file.name);
 
       // Save to localStorage only for anonymous users (authenticated saves to DB)
@@ -235,12 +263,38 @@ function App() {
           </label>
         </div>
 
+        <div style={{ display: "flex", gap: "12px", justifyContent: "center", alignItems: "center" }} className="mb-3">
+          <button 
+            className="analyze-btn" 
+            onClick={uploadResume}
+            disabled={loading}
+          >
+            {loading && analysisSource === "upload" ? "⏳ Analyzing..." : "🚀 Analyze Resume"}
+          </button>
+          <button 
+            className="secondary-btn" 
+            onClick={handleSampleResume}
+            disabled={loading}
+            type="button"
+          >
+            {loading && analysisSource === "sample" ? "⏳ Loading Sample..." : "Try Sample Resume"}
+          </button>
+        </div>
         <button type="button" className="app-btn analyze-btn" onClick={uploadResume} disabled={loading}>
           {loading ? "⏳ Analyzing..." : "🚀 Analyze Resume"}
         </button>
 
         {score !== null && (
           <>
+            {analysisSource === "sample" && (
+              <div className="sample-notice-banner mb-4">
+                <span>ℹ️ Viewing Sample Resume Analysis</span>
+                <span style={{ fontWeight: "normal", fontSize: "13px" }}>
+                  — This analysis is based on a bundled sample resume.
+                </span>
+              </div>
+            )}
+
             <AtsScore score={score} />
 
             <h5 className="analysis-done">

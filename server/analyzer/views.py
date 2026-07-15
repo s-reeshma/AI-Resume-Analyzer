@@ -65,20 +65,37 @@ def upload_resume(request):
     text = text.lower()
 
     detected_skills = [s for s in skills_list if s.lower() in text]
-    score = min(len(detected_skills) * 10, 100)
 
-    suggestions = []
-    if "python" not in detected_skills:
-        suggestions.append("Add Python projects")
-    if "django" not in detected_skills:
-        suggestions.append("Mention Django experience")
-    if "react" not in detected_skills:
-        suggestions.append("Add frontend skills like React")
+    matched_skills = []
+    missing_skills = []
 
-    matched_skills, missing_skills = [], []
     if target_role in ROLE_SKILL_MATRICES:
-        for skill in ROLE_SKILL_MATRICES[target_role]:
-            (matched_skills if skill in detected_skills else missing_skills).append(skill)
+        required_skills = ROLE_SKILL_MATRICES[target_role]
+
+        for skill in required_skills:
+            if skill in detected_skills:
+                matched_skills.append(skill)
+            else:
+                missing_skills.append(skill)
+
+        # Dynamic role-based score
+        score = int((len(matched_skills) / len(required_skills)) * 100) if required_skills else 100
+
+        # Dynamic suggestions
+        suggestions = [
+            f"Add experience or projects with {skill.upper() if skill in ['html', 'css', 'sql', 'git'] else skill.capitalize()}"
+            for skill in missing_skills
+        ]
+    else:
+        score = min(len(detected_skills) * 10, 100)
+
+        suggestions = []
+        if "python" not in detected_skills:
+            suggestions.append("Add Python projects")
+        if "django" not in detected_skills:
+            suggestions.append("Mention Django experience")
+        if "react" not in detected_skills:
+            suggestions.append("Add frontend skills like React")
 
     # Save to DB only for authenticated users
     if request.user and request.user.is_authenticated:
