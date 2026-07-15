@@ -58,20 +58,44 @@ function App() {
       formData.append("file", file);
       formData.append("role", targetRole);
 
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
       const res = await axios.post(
-        "http://127.0.0.1:8000/api/upload/",
+        `${backendUrl}/api/upload/`,
         formData
       );
 
-      setScore(res.data.score);
-      setSkills(res.data.skills_found);
-      setSuggestions(res.data.suggestions);
-      setMatchedSkills(res.data.matched_skills || []);
-      setMissingSkills(res.data.missing_skills || []);
-      setLoading(false);   
-    } catch (error) {
+      const taskId = res.data.task_id;
+      
+      // Start polling
+      const pollInterval = setInterval(async () => {
+        try {
+          const statusRes = await axios.get(`${backendUrl}/api/task-status/${taskId}/`);
+          if (statusRes.data.status === 'SUCCESS') {
+            clearInterval(pollInterval);
+            setScore(statusRes.data.result.score);
+            setSkills(statusRes.data.result.skills_found);
+            setSuggestions(statusRes.data.result.suggestions);
+            setMatchedSkills(statusRes.data.result.matched_skills || []);
+            setMissingSkills(statusRes.data.result.missing_skills || []);
+            setLoading(false);
+          } else if (statusRes.data.status === 'FAILURE') {
+            clearInterval(pollInterval);
+            console.error(statusRes.data.error);
+            alert("Analysis failed.");
+            setLoading(false);
+          }
+        } catch (pollErr) {
+          clearInterval(pollInterval);
+          console.error(pollErr);
+          alert("Error checking task status.");
+          setLoading(false);
+        }
+      }, 2000);
+
+    } catch (error: any) {
       console.error(error);
-      alert("Upload failed");
+      const errorMsg = error.response?.data?.error || error.message || "Unknown error";
+      alert(`Upload failed: ${errorMsg}`);
       setLoading(false);   
     }
   };
@@ -134,7 +158,7 @@ function App() {
         </div>
 
         <button className="analyze-btn" onClick={uploadResume}>
-          {loading ? "⏳ Analyzing..." : "🚀 Analyze Resume"}
+          {loading ? "⏳ Extracting and analyzing resume text..." : "🚀 Analyze Resume"}
         </button>
 
         {score !== null && (

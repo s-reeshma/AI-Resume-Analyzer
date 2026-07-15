@@ -1,76 +1,59 @@
+import os
+import uuid
+from django.core.files.storage import FileSystemStorage
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
-import pdfplumber
-
-skills_list = [
-    "python","django","react","javascript","sql",
-    "html","css","git","github","flask",
-    "machine learning","data analysis",
-    "excel","microsoft office","ms office",
-    "c","c++","java"
-]
-
-# Acceptance Criteria: Predefined skill sets for at least 3 roles
-ROLE_SKILL_MATRICES = {
-    "Frontend Developer": ["html", "css", "javascript", "react", "git", "github"],
-    "Backend Developer": ["python", "django", "flask", "sql", "git", "github"],
-    "Data Analyst": ["python", "excel", "sql", "data analysis", "machine learning"]
-}
+from celery.result import AsyncResult
+from .tasks import analyze_resume_task
 
 @api_view(["POST"])
 @parser_classes([MultiPartParser, FormParser])
 def upload_resume(request):
     file = request.FILES.get("file")
-    # Acceptance Criteria: Endpoint accepts a target role parameter
     target_role = request.data.get("role", None)
 
-    text = ""
-    with pdfplumber.open(file) as pdf:
-        for page in pdf.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text
+    if not file:
+        return Response({"error": "No file uploaded"}, status=400)
 
-    text = text.lower()
-    print(text)   # debug
+    try:
+        # Save file temporarily for Celery task
+        from django.conf import settings
+        tmp_dir = os.path.join(settings.BASE_DIR, 'tmp')
+        os.makedirs(tmp_dir, exist_ok=True)
+        fs = FileSystemStorage(location=tmp_dir)
+        filename = f"{uuid.uuid4()}_{file.name}"
+        saved_filename = fs.save(filename, file)
+        file_path = fs.path(saved_filename)
 
-    detected_skills = []
-    for skill in skills_list:
-        if skill.lower() in text:
-            detected_skills.append(skill)
+        # Dispatch Celery task
+        task = analyze_resume_task.delay(file_path, target_role)
 
-    score = len(detected_skills) * 10
-    if score > 100:
-        score = 100
+        return Response({
+            "task_id": task.id,
+            "status": "PENDING"
+        })
+    except Exception as e:
+        import traceback
+        error_msg = str(e)
+        traceback.print_exc()
+        return Response({"error": f"Internal Server Error: {error_msg}"}, status=500)
 
-    suggestions = []
-    if "python" not in detected_skills:
-        suggestions.append("Add Python projects")
-    if "django" not in detected_skills:
-        suggestions.append("Mention Django experience")
-    if "react" not in detected_skills:
-        suggestions.append("Add frontend skills like React")
-
-
-    # --- NEW SKILL GAP ANALYSIS LOGIC ---
-    matched_skills = []
-    missing_skills = []
-
-    if target_role in ROLE_SKILL_MATRICES:
-        required_skills = ROLE_SKILL_MATRICES[target_role]
-        for skill in required_skills:
-            if skill in detected_skills:
-                matched_skills.append(skill)
-            else:
-                missing_skills.append(skill)
-
-    return Response({
-        "score": score,
-        "skills_found": detected_skills,
-        "suggestions": suggestions,
-        "target_role": target_role,
-        "matched_skills": matched_skills,
-        "missing_skills": missing_skills
-    })
+@api_view(["GET"])
+def check_task_status(request, task_id):
+    task_result = AsyncResult(task_id)
     
+    if task_result.state == 'SUCCESS':
+        return Response({
+            "status": task_result.state,
+            "result": task_result.result
+        })
+    elif task_result.state == 'FAILURE':
+        return Response({
+            "status": task_result.state,
+            "error": str(task_result.info)
+        })
+    else:
+        return Response({
+            "status": task_result.state
+        })
