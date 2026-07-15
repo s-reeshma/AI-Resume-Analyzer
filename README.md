@@ -123,6 +123,7 @@ Ensure you have the following packages installed on your local development machi
 - **Node.js** (v18 or higher)
 - **Python** (v3.10 or higher)
 - **Git**
+- **Redis Server** (running locally on port 6379 for Celery tasks)
 
 ---
 
@@ -165,6 +166,10 @@ python manage.py migrate
 
 # Spin up Django development server
 python manage.py runserver
+
+# In a separate terminal, activate the venv and start the Celery background worker:
+# (Use --pool=solo on Windows to avoid process spawning issues)
+celery -A resume_analyzer worker -l info --pool=solo
 ```
 The API server starts on: `http://127.0.0.1:8000/`
 
