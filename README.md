@@ -152,6 +152,12 @@ venv\Scripts\activate
 # macOS/Linux:
 source venv/bin/activate
 
+# Create local environment configuration from the example
+# Windows:
+copy .env.example .env
+# macOS/Linux:
+cp .env.example .env
+
 # Install dependencies
 pip install -r requirements.txt
 
@@ -167,6 +173,13 @@ celery -A resume_analyzer worker -l info --pool=solo
 ```
 The API server starts on: `http://127.0.0.1:8000/`
 
+#### Server Environment Variables
+| Variable | Description | Default / Placeholder |
+| :--- | :--- | :--- |
+| `SECRET_KEY` | Secret key for Django cryptographic signing | `django-insecure-local-development-secret-key-change-me` |
+| `DEBUG` | Set to `True` for development, `False` for production | `True` |
+| `ALLOWED_HOSTS` | Comma-separated list of allowed host/domain names | `localhost,127.0.0.1,127.0.0.1:8000` |
+
 ---
 
 ### Client Setup (React)
@@ -175,6 +188,12 @@ The API server starts on: `http://127.0.0.1:8000/`
 # Open a new terminal instance and navigate to client directory
 cd client
 
+# Create local environment configuration from the example
+# Windows:
+copy .env.example .env
+# macOS/Linux:
+cp .env.example .env
+
 # Install packages
 npm install
 
@@ -182,6 +201,11 @@ npm install
 npm run dev
 ```
 The client application will run at: `http://localhost:5173/`
+
+#### Client Environment Variables
+| Variable | Description | Default / Placeholder |
+| :--- | :--- | :--- |
+| `VITE_BACKEND_URL` | The URL of the Django backend REST API server | `http://127.0.0.1:8000` |
 
 ---
 
@@ -215,6 +239,30 @@ Validates and parses an uploaded resume, matches standard technical keywords, ca
     "Add frontend skills like React"
   ]
 }
+```
+
+---
+
+## Rate Limiting
+
+The resume upload endpoint (`POST /api/upload/`) is throttled per client IP using DRF's `SimpleRateThrottle`.
+
+| Setting | Default | Description |
+| :--- | :--- | :--- |
+| `RESUME_UPLOAD_RATE` | `10/hour` | Max requests per IP. Format: `<n>/hour`, `<n>/day`, `<n>/min` |
+
+To change the limit, set `RESUME_UPLOAD_RATE` in your `server/.env`:
+
+```env
+RESUME_UPLOAD_RATE=20/hour
+```
+
+When the limit is exceeded, the API returns:
+
+```json
+// HTTP 429 Too Many Requests
+// Retry-After: <seconds>
+{ "detail": "Request was throttled. Expected available in <N> seconds." }
 ```
 
 ---
