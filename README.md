@@ -3,6 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/Muskankr/AI-Resume-Analyzer?style=for-the-badge&color=34d399)](https://github.com/Muskankr/AI-Resume-Analyzer/blob/main/LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/Muskankr/AI-Resume-Analyzer?style=for-the-badge&color=f43f5e)](https://github.com/Muskankr/AI-Resume-Analyzer/issues)
 [![Last Commit](https://img.shields.io/github/last-commit/Muskankr/AI-Resume-Analyzer?style=for-the-badge)](https://github.com/Muskankr/AI-Resume-Analyzer/commits/main)
+[![Build](https://img.shields.io/github/actions/workflow/status/Muskankr/AI-Resume-Analyzer/ci.yml?style=for-the-badge)](...)
 [![GitHub stars](https://img.shields.io/github/stars/Muskankr/AI-Resume-Analyzer?style=for-the-badge&color=fbbf24)](https://github.com/Muskankr/AI-Resume-Analyzer/stargazers)
 ![Forks](https://img.shields.io/github/forks/Muskankr/AI-Resume-Analyzer?style=for-the-badge)
 [![GitHub contributors](https://img.shields.io/github/contributors/Muskankr/AI-Resume-Analyzer?style=for-the-badge&color=818cf8)](https://github.com/Muskankr/AI-Resume-Analyzer/graphs/contributors)
@@ -300,6 +301,8 @@ When the limit is exceeded, the API returns:
 ## Contributing
 
 We welcome contributions of all levels under the **ECSoC'26** program!
+
+📜 Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating in this project. By contributing, you agree to abide by its guidelines.
 
 1. **Fork** the repository on GitHub.
 2. Clone your fork and create a checkout branch:
