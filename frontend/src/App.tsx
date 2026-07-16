@@ -7,6 +7,7 @@ import { HistorySidebar } from "./HistorySidebar";
 import { useAuth } from "./hooks/useAuth";
 import { AuthModal } from "./AuthModal";
 import { Footer } from "./Footer";
+import AnalysisSkeleton from "./components/AnalysisSkeleton/AnalysisSkeleton";
 
 type Theme = "light" | "dark";
 
@@ -202,10 +203,10 @@ function App() {
 
       setActiveFileName(sampleFile.name);
     } catch (error: unknown) {
-  console.error(error);
-  alert("Could not load sample resume");
-  setLoading(false);
-}
+      console.error(error);
+      alert("Could not load sample resume");
+      setLoading(false);
+    }
   };
 
   const resetAnalysis = () => {
@@ -341,17 +342,8 @@ function App() {
             </button>
           </div>
 
-          {/* Loading spinner — shown while the resume is being analyzed */}
-          {loading && (
-            <div
-              className="loader"
-              role="status"
-              aria-live="polite"
-              aria-label="Analyzing resume, please wait"
-            >
-              <span className="sr-only">Analyzing resume, please wait…</span>
-            </div>
-          )}
+          {/* Loading skeleton — shown while the resume is being analyzed */}
+          {loading && <AnalysisSkeleton />}
 
           {/* Results */}
           {score !== null && (
