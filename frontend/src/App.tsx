@@ -38,6 +38,7 @@ function App() {
   const [showAllSkills, setShowAllSkills] = useState(false);
   const [copied, setCopied] = useState(false);
   const [analysisSource, setAnalysisSource] = useState<"sample" | "upload" | null>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   // Auth
   const { user, signup, login, logout } = useAuth();
@@ -86,6 +87,14 @@ function App() {
       // persistence is best-effort; ignore if storage is unavailable
     }
   }, [theme]);
+
+  // Reveal the "Back to top" button once the page is scrolled down
+  useEffect(() => {
+    const onScroll = () => setShowBackToTop(window.scrollY > 300);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
@@ -401,6 +410,17 @@ function App() {
           )}   {/* closes the conditional block */}
         </div> {/* closes .main-card */}
       </div> {/* closes .container */}
+
+      {/* Back to top — appears after scrolling down long result pages */}
+      <button
+        type="button"
+        className={`back-to-top${showBackToTop ? " back-to-top--visible" : ""}`}
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        aria-label="Back to top"
+        title="Back to top"
+      >
+        ↑
+      </button>
 
       <Footer />  {/* footer should be outside main container */}
 
