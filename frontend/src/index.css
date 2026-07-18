@@ -1177,10 +1177,8 @@ border:0;
    THEME TOGGLE BUTTON VISIBILITY SUPPORT
    ========================================================================== */
 
-/* Target the theme switch toggle dynamically across the Navbar components */
-.theme-toggle-btn,
-.navbar button:first-of-type,
-nav button:has(span) {
+/* Target ONLY the explicit theme switch toggle class */
+.theme-toggle-btn {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -1199,24 +1197,20 @@ nav button:has(span) {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
 }
 
-.theme-toggle-btn:hover,
-.navbar button:first-of-type:hover {
+.theme-toggle-btn:hover {
   background-color: #e2e8f0 !important;
   color: #1e293b !important;
 }
 
 /* Dark Theme Adjustments for Toggle Button */
-[data-theme="dark"] .theme-toggle-btn,
-[data-theme="dark"] .navbar button:first-of-type,
-[data-theme="dark"] nav button:has(span) {
+[data-theme="dark"] .theme-toggle-btn {
   background-color: #1e293b !important;
   border: 1px solid #334155 !important;
   color: #f8fafc !important;
   box-shadow: none !important;
 }
 
-[data-theme="dark"] .theme-toggle-btn:hover,
-[data-theme="dark"] .navbar button:first-of-type:hover {
+[data-theme="dark"] .theme-toggle-btn:hover {
   background-color: #334155 !important;
   color: #ffffff !important;
 }
