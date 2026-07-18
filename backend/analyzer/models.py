@@ -20,6 +20,7 @@ class ResumeAnalysis(models.Model):
     missing_skills = models.JSONField(default=list)
     target_role = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
+    job_description = models.TextField(blank=True, null=True)
 
     class Meta:
         ordering = ["-created_at"]

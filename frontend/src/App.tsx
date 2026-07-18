@@ -38,6 +38,7 @@ function App() {
   const [showAllSkills, setShowAllSkills] = useState(false);
   const [copied, setCopied] = useState(false);
   const [analysisSource, setAnalysisSource] = useState<"sample" | "upload" | null>(null);
+  const [jobDesc, setJobDesc] = useState("");
 
   // Auth
   const { user, signup, login, logout } = useAuth();
@@ -49,6 +50,10 @@ function App() {
   const [activeFileName, setActiveFileName] = useState("");
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
+
+  const MAX_CHARS = 2000;
+  const isClose = jobDesc.length >= MAX_CHARS * 0.9; // 90% threshold
+  const isOver = jobDesc.length > MAX_CHARS;
 
   const fetchDbHistory = useCallback(async (token: string) => {
     try {
@@ -98,7 +103,7 @@ function App() {
       const formData = new FormData();
       formData.append("file", fileToAnalyze);
       formData.append("role", targetRole);
-
+      formData.append('job_description', jobDesc);
       const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
       const headers = user ? { Authorization: `Bearer ${user.token}` } : {};
       const res = await axios.post(`${backendUrl}/api/upload/`, formData, { headers });
@@ -285,10 +290,34 @@ function App() {
               }}
             />
             <label htmlFor="fileUpload" className="upload-label">
-              📄 {file ? file.name : "Drag & Drop Resume or Click to Upload"}
+               {file ? file.name : "Drag & Drop Resume or Click to Upload"}
             </label>
           </div>
-
+          <div className="mb-4" style={{ textAlign: "left" }}>
+            <label htmlFor="jobDescription" 
+            style={{ fontWeight: "600", display: "block", marginBottom: "8px" }}
+            >Job Description</label>
+            <textarea
+                id="jobDescription"
+                className="custom-textarea"
+                value={jobDesc}
+                onChange={(e) => setJobDesc(e.target.value)}
+                placeholder="Paste the job description here..."
+                style={{ width: '100%', minHeight: '100px' }}
+               />
+  
+          {/* The Live Counter */}
+          <div style={{ 
+            textAlign: 'right', 
+            color: isOver ? '#ef4444' : (isClose ? '#f97316' : 'inherit'),
+            opacity: isOver || isClose ? 1 : 0.7,
+            fontSize: '0.85rem',
+            marginTop: '5px',
+            fontWeight: isOver ? 'bold' : 'normal'
+            }}>
+            {jobDesc.length} / {MAX_CHARS} characters
+          </div>
+        </div>
           <div style={{ display: "flex", gap: "12px", justifyContent: "center", alignItems: "center" }} className="mb-3">
             <button
               className="analyze-btn"

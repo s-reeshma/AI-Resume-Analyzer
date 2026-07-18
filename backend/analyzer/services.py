@@ -66,7 +66,7 @@ ROLE_SKILLS = {
 }
 
 
-def analyze_resume(file_path, target_role, file_name="resume.pdf", user_id=None):
+def analyze_resume(file_path, target_role, file_name="resume.pdf",user_id=None,job_description=None):
 
     text = ""
 
@@ -120,6 +120,7 @@ def analyze_resume(file_path, target_role, file_name="resume.pdf", user_id=None)
                 matched_skills=matched,
                 missing_skills=missing,
                 target_role=target_role,
+                job_description=job_description,
             )
 
         except User.DoesNotExist:

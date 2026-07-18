@@ -23,7 +23,6 @@ from .services import analyze_resume
 
 class UploadRateThrottle(SimpleRateThrottle):
     scope = "upload"
-
     def get_rate(self):
         return getattr(settings, "RESUME_UPLOAD_RATE", "10/hour")
 
@@ -59,6 +58,7 @@ def upload_resume(request):
     file = request.FILES.get("file")
     target_role = request.data.get("role", "")
     file_name = file.name if file else "resume.pdf"
+    job_desc = request.data.get("job_description", "")[:2000]
 
     if not file:
         return Response(
@@ -89,6 +89,7 @@ def upload_resume(request):
             target_role=target_role,
             file_name=file_name,
             user_id=user_id,
+            job_description=job_desc,
         )
 
         return Response(result)
