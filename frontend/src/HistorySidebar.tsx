@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { X, ClipboardList, BookOpen, GitCompare } from "lucide-react";
-import type { AnalysisEntry } from "./hooks/useAnalysisHistory";
+import React, { useState, useEffect } from 'react'
+import { X, ClipboardList, BookOpen, GitCompare } from 'lucide-react'
+import type { AnalysisEntry } from './hooks/useAnalysisHistory'
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 10
 
 interface HistorySidebarProps {
-  entries: AnalysisEntry[];
-  activeFileName?: string;
-  onSelect: (entry: AnalysisEntry) => void;
-  onDelete: (id: string) => void;
-  onClear: () => void;
-  isOpen: boolean;
-  onToggle: () => void;
-  onCompare?: () => void;
+  entries: AnalysisEntry[]
+  activeFileName?: string
+  onSelect: (entry: AnalysisEntry) => void
+  onDelete: (id: string) => void
+  onClear: () => void
+  isOpen: boolean
+  onToggle: () => void
+  onCompare?: () => void
 }
 
 export const HistorySidebar: React.FC<HistorySidebarProps> = ({
@@ -25,32 +25,32 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
   onToggle,
   onCompare,
 }) => {
-  const [confirmClear, setConfirmClear] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setVisibleCount(PAGE_SIZE);
-  }, [entries]);
+    setVisibleCount(PAGE_SIZE)
+  }, [entries])
 
   const handleLoadMore = () => {
-    setIsLoadingMore(true);
+    setIsLoadingMore(true)
     setTimeout(() => {
-      setVisibleCount((prev) => prev + PAGE_SIZE);
-      setIsLoadingMore(false);
-    }, 300);
-  };
+      setVisibleCount((prev) => prev + PAGE_SIZE)
+      setIsLoadingMore(false)
+    }, 300)
+  }
 
   const formatDate = (ts: number) => {
-    const d = new Date(ts);
+    const d = new Date(ts)
     return d.toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
 
   return (
     <>
@@ -58,22 +58,22 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
       <button
         className="history-toggle-btn"
         onClick={onToggle}
-        aria-label={isOpen ? "Close history" : "Open history"}
-        title={isOpen ? "Close history" : "View history"}
+        aria-label={isOpen ? 'Close history' : 'Open history'}
+        title={isOpen ? 'Close history' : 'View history'}
       >
         {isOpen ? <X size={18} /> : <ClipboardList size={18} />}
-        {!isOpen && entries.length > 0 && (
-          <span className="history-badge">{entries.length}</span>
-        )}
+        {!isOpen && entries.length > 0 && <span className="history-badge">{entries.length}</span>}
       </button>
 
       {/* Sidebar panel */}
-      <div 
-        className={`history-sidebar ${isOpen ? "history-sidebar--open" : ""}`}
+      <div
+        className={`history-sidebar ${isOpen ? 'history-sidebar--open' : ''}`}
         aria-hidden={!isOpen}
       >
         <div className="history-sidebar-header">
-          <h3><BookOpen size={18} /> History</h3>
+          <h3>
+            <BookOpen size={18} /> History
+          </h3>
           <div className="history-header-actions">
             {onCompare && entries.length > 1 && (
               <button
@@ -89,15 +89,15 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                 className="history-clear-btn"
                 onClick={() => {
                   if (confirmClear) {
-                    onClear();
-                    setConfirmClear(false);
+                    onClear()
+                    setConfirmClear(false)
                   } else {
-                    setConfirmClear(true);
-                    setTimeout(() => setConfirmClear(false), 2500);
+                    setConfirmClear(true)
+                    setTimeout(() => setConfirmClear(false), 2500)
                   }
                 }}
               >
-                {confirmClear ? "Confirm?" : "Clear All"}
+                {confirmClear ? 'Confirm?' : 'Clear All'}
               </button>
             )}
           </div>
@@ -113,13 +113,13 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                   key={entry.id}
                   role="button"
                   tabIndex={0}
-                  aria-current={activeFileName === entry.fileName ? "true" : undefined}
+                  aria-current={activeFileName === entry.fileName ? 'true' : undefined}
                   className={`history-item ${activeFileName === entry.fileName ? 'history-item--active' : ''}`}
                   onClick={() => onSelect(entry)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      onSelect(entry);
+                      e.preventDefault()
+                      onSelect(entry)
                     }
                   }}
                 >
@@ -128,13 +128,22 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                     <button
                       className="history-item-delete"
                       onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(entry.id);
+                        e.stopPropagation()
+                        onDelete(entry.id)
                       }}
                       aria-label="Delete analysis"
                       title="Delete entry"
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
                         <polyline points="3 6 5 6 21 6"></polyline>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                       </svg>
@@ -144,21 +153,28 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                   <div className="history-item-file">{entry.fileName}</div>
                   <div className="history-item-time">{formatDate(entry.timestamp)}</div>
                   <div className="history-item-skills">
-                    {entry.skills.slice(0, 4).join(" · ")}
+                    {entry.skills.slice(0, 4).join(' · ')}
                     {entry.skills.length > 4 && ` +${entry.skills.length - 4} more`}
                   </div>
                 </li>
               ))}
             </ul>
             {visibleCount < entries.length && (
-              <div className="history-load-more-container" style={{ textAlign: "center", margin: "1rem 0" }}>
+              <div
+                className="history-load-more-container"
+                style={{ textAlign: 'center', margin: '1rem 0' }}
+              >
                 <button
                   className="app-btn"
                   onClick={handleLoadMore}
                   disabled={isLoadingMore}
-                  style={{ fontSize: "0.9rem", padding: "0.4rem 0.8rem", opacity: isLoadingMore ? 0.7 : 1 }}
+                  style={{
+                    fontSize: '0.9rem',
+                    padding: '0.4rem 0.8rem',
+                    opacity: isLoadingMore ? 0.7 : 1,
+                  }}
                 >
-                  {isLoadingMore ? "Loading..." : "Load More"}
+                  {isLoadingMore ? 'Loading...' : 'Load More'}
                 </button>
               </div>
             )}
@@ -166,5 +182,5 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
         )}
       </div>
     </>
-  );
-};
+  )
+}

@@ -508,11 +508,23 @@ function App() {
                   if (e.target.files) setFile(e.target.files[0]);
                 }}
               />
-              <label htmlFor="fileUpload" className="upload-label" style={{ display: "block", wordBreak: "break-all", padding: "15px" }}>
-                📄 {file ? file.name : "Drag & Drop Resume or Click to Upload"}
-              <label htmlFor="fileUpload" className="upload-label" style={{ cursor: "pointer", display: "block", fontSize: "var(--font-size-base)", wordBreak: "break-all" }}>
-                📄 {file ? <strong style={{ color: "#a5b4fc" }}>{file.name}</strong> : "Drag & Drop Resume or Click to Browse"}
-              </label>
+              <label
+  htmlFor="fileUpload"
+  className="upload-label"
+  style={{
+    cursor: "pointer",
+    display: "block",
+    fontSize: "var(--font-size-base)",
+    wordBreak: "break-all",
+  }}
+>
+  📄{" "}
+  {file ? (
+    <strong style={{ color: "#a5b4fc" }}>{file.name}</strong>
+  ) : (
+    "Drag & Drop Resume or Click to Browse"
+  )}
+</label>
             </div>
 
 

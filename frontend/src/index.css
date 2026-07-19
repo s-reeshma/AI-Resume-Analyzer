@@ -1353,7 +1353,7 @@ border:0;
 }
 
 /* Ensure container grid alignment wraps beautifully on tight mobile layouts */
-@media (max-width: 600px) {
+@media (max-width: 600px) {}
   .app-footer {
     padding: 30px 16px 16px !important;
   }
