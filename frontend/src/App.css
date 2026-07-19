@@ -182,3 +182,33 @@
     border-right-color: var(--border);
   }
 }
+
+
+.custom-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background-color: #fff; 
+  color: #000;
+  font-family: inherit;
+  resize: vertical; 
+  transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s, color 0.3s;
+}
+
+
+.custom-textarea:focus {
+  outline: none;
+  border-color: #3b82f6; 
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+[data-theme="dark"] .custom-textarea {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .custom-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
