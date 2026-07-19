@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import "./index.css";
 import { AtsScore } from "./AtsScore";
@@ -63,6 +63,7 @@ function App() {
   const [score, setScore] = useState<number | null>(null);
   const [skills, setSkills] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showShortcutHelp, setShowShortcutHelp] = useState(false);
 
   // Component States
   const [targetRole, setTargetRole] = useState("Frontend Developer");
@@ -150,6 +151,36 @@ function App() {
     }
   }, [theme]);
 
+  // Global Keyboard Shortcut Action Router
+  useEffect(() => {
+    const handleGlobalKeyDown = (event: KeyboardEvent) => {
+      // Using Alt key universally to avoid layout and browser conflicts
+      const modifier = event.altKey; 
+
+      // 1. Trigger Upload File Picker: Alt + U
+      if (modifier && event.key.toLowerCase() === 'u') {
+        event.preventDefault();
+        document.getElementById('fileUpload')?.click();
+      }
+
+      // 2. Trigger Clear/Reset Analysis Matrix: Alt + R
+      if (modifier && event.key.toLowerCase() === 'r') {
+        event.preventDefault();
+        resetAnalysis();
+      }
+
+      // 3. Close Active Modals/Panels: Escape
+      if (event.key === 'Escape') {
+        setShowAuthModal(false);
+        setHistoryOpen(false);
+        setShowShortcutHelp(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
+
   const toggleTheme = () => {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
@@ -178,7 +209,7 @@ function App() {
 
       if (user) {
         await fetchDbHistory(user.token);
-        }
+      }
       else {
         addEntry({
           score: res.data.score,
@@ -189,7 +220,7 @@ function App() {
           targetRole: targetRole,
           fileName: fileToAnalyze.name,
         });
-    }
+      }
     } catch (error: unknown) {
       console.error(error);
 
@@ -288,9 +319,9 @@ function App() {
     setHistoryOpen(false);
   };
   const handleLogout = () => {
-  logout();           
-  clearHistory();
-};
+    logout();           
+    clearHistory();
+  };
   return (
     <>
       <HistorySidebar
@@ -491,6 +522,38 @@ function App() {
 
       <Footer />  {/* footer should be outside main container */}
 
+      {/* Floating Keyboard Shortcuts Help Panel Overlay */}
+      <button 
+        className="shortcut-help-trigger" 
+        onClick={() => setShowShortcutHelp(!showShortcutHelp)}
+        title="Toggle Keyboard Shortcuts Help"
+        aria-label="Toggle keyboard shortcuts menu"
+      >
+        ?
+      </button>
+
+      {showShortcutHelp && (
+        <div className="shortcut-overlay-card">
+          <h5 style={{ margin: "0 0 12px 0", color: "#fff", display: "flex", alignItems: "center", gap: "6px" }}>
+            ⌨️ Keyboard Quick Actions
+          </h5>
+          <div className="shortcut-row">
+            <span style={{ color: "#94a3b8" }}>Upload Resume</span>
+            <span className="shortcut-key-badge">Alt + U</span>
+          </div>
+          <div className="shortcut-row">
+            <span style={{ color: "#94a3b8" }}>Reset Analysis</span>
+            <span className="shortcut-key-badge">Alt + R</span>
+          </div>
+          <div className="shortcut-row">
+            <span style={{ color: "#94a3b8" }}>Close Modals / Sidebar</span>
+            <span className="shortcut-key-badge">Esc</span>
+          </div>
+          <p style={{ margin: "12px 0 0 0", fontSize: "11px", color: "#64748b", fontStyle: "italic" }}>
+            Press <kbd style={{ color: "#a5b4fc" }}>Esc</kbd> at any point to clear this helper overlay panel frame views.
+          </p>
+        </div>
+      )}
     </>
   ); {/* closes the return fragment */ }
 } {/* closes App function */ }

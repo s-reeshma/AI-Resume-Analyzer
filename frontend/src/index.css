@@ -726,3 +726,69 @@ border:0;
     transform: translateX(-50%) translateY(-10px);
   }
 }
+/* ==========================================================================
+   ⌨️ Issue #154: Keyboard Shortcuts & Help Indicator Styles
+   ========================================================================== */
+
+/* Floating Help Toggle Trigger */
+.shortcut-help-trigger {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(30, 30, 47, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #a5b4fc;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.shortcut-help-trigger:hover {
+  background: #6366f1;
+  color: #fff;
+  transform: scale(1.05);
+}
+
+/* Floating Overlay Panel Box */
+.shortcut-overlay-card {
+  position: fixed;
+  bottom: 70px;
+  right: 20px;
+  background: #1e1e2f;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  width: 280px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  text-align: left;
+  animation: slideUpModal 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.shortcut-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0;
+  font-size: 13px;
+}
+
+.shortcut-key-badge {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 3px solid rgba(255, 255, 255, 0.25);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 11px;
+  color: #fff;
+}
