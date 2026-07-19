@@ -117,6 +117,7 @@ function App() {
   const [showAllSkills, setShowAllSkills] = useState(false);
   const [copied, setCopied] = useState(false);
   const [analysisSource, setAnalysisSource] = useState<"sample" | "upload" | null>(null);
+  const [jobDesc, setJobDesc] = useState("");
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [resumeText, setResumeText] = useState<string>("");
   const [activeFileName, setActiveFileName] = useState("");
@@ -128,7 +129,7 @@ function App() {
   const { entries, addEntry, deleteEntry, clearHistory, setEntries } = useAnalysisHistory();
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
-
+  
   const handleDeleteEntry = async (id: string) => {
     if (user) {
       try {
@@ -141,6 +142,10 @@ function App() {
     }
     deleteEntry(id);
   };
+
+  const MAX_CHARS = 2000;
+  const isClose = jobDesc.length >= MAX_CHARS * 0.9;
+  const isOver = jobDesc.length > MAX_CHARS;
 
   const handleClearAll = async () => {
     if (user) {
@@ -254,6 +259,8 @@ function App() {
       formData.append("file", fileToAnalyze);
       formData.append("role", targetRole);
 
+      formData.append('job_description', jobDesc);
+      
       const headers = user ? { Authorization: `Bearer ${user.token}` } : {};
       const res = await axios.post(`${backendUrl}/api/upload/`, formData, { headers });
 
@@ -282,7 +289,12 @@ function App() {
       }
     } catch (error: any) {
       console.error(error);
-      const errorMsg = error.response?.data?.error ?? error.message ?? "Unknown error";
+      let errorMsg = "Unknown error";
+      if (axios.isAxiosError(error)) {
+        errorMsg = error.response?.data?.error ?? error.message;
+      } else if (error instanceof Error) {
+        errorMsg = error.message;
+      }
       alert(source === "sample" ? `Sample analysis failed: ${errorMsg}` : `Upload failed: ${errorMsg}`);
       setLoading(false);
     }
@@ -298,12 +310,14 @@ function App() {
       setLoading(true);
       setAnalysisSource("sample");
       const response = await fetch("/sample-resume.pdf");
-      if (!response.ok) throw new Error("Failed to load sample resume PDF");
+      if (!response.ok) {
+        throw new Error("Failed to load sample resume PDF");
+      }
       const blob = await response.blob();
       const sampleFile = new File([blob], "sample-resume.pdf", { type: "application/pdf" });
       await runAnalysis(sampleFile, "sample");
       setActiveFileName(sampleFile.name);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       alert("Could not load sample resume");
       setLoading(false);
@@ -419,6 +433,123 @@ function App() {
               onClose={() => setShowAuthModal(false)}
             />
           )}
+          
+          <h1 className="mb-4 app-main-title" style={{ fontSize: "calc(1.5rem + 1.5vw)", wordBreak: "break-word" }}>
+            🚀 AI Resume Analyzer
+          </h1>
+
+          {/* STEP 1: Role Selector Container */}
+          <div className="mb-5 p-4" style={{ background: "rgba(255, 255, 255, 0.02)", borderRadius: "var(--radius-lg)", border: "1px solid rgba(255,255,255,0.04)" }}>
+            <label htmlFor="roleSelect" style={{ display: "block", marginBottom: "12px", fontWeight: "600", color: "#e2e8f0", fontSize: "var(--font-size-sm)" }}>
+              1️⃣ Choose your Target Career Track
+            </label>
+            <div className="custom-select-container" style={{ display: "flex", justifyContent: "center" }}>
+              <select
+                id="roleSelect"
+                value={targetRole}
+                onChange={(e) => setTargetRole(e.target.value)}
+                className="custom-select-element role-select-dropdown"
+                style={{ padding: "10px 16px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(255,255,255,0.15)", width: "100%", maxWidth: "320px", background: "#1e1e2f", color: "#fff", fontSize: "var(--font-size-sm)" }}
+              >
+                <option value="Frontend Developer">Frontend Developer</option>
+                <option value="Backend Developer">Backend Developer</option>
+                <option value="Data Analyst">Data Analyst</option>
+              </select>
+            </div>
+          </div>
+
+          {/* STEP 2: Upload Container */}
+          <div className="mb-5">
+            <span style={{ display: "block", marginBottom: "12px", fontWeight: "600", color: "#e2e8f0", fontSize: "var(--font-size-sm)" }}>
+              2️⃣ Upload your Document & Job Details
+            </span>
+            <div className="upload-box mb-4" style={{ padding: "32px 20px", border: "2px dashed var(--upload-border)", borderRadius: "var(--radius-lg)", background: "var(--upload-bg)", transition: "all 0.3s ease" }}>
+              <input
+                type="file"
+                id="fileUpload"
+                hidden
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  if (e.target.files) setFile(e.target.files[0]);
+                }}
+              />
+              <label htmlFor="fileUpload" className="upload-label" style={{ cursor: "pointer", display: "block", fontSize: "var(--font-size-base)", wordBreak: "break-all" }}>
+                📄 {file ? <strong style={{ color: "#a5b4fc" }}>{file.name}</strong> : "Drag & Drop Resume or Click to Browse"}
+              </label>
+            </div>
+
+            <div className="mb-4" style={{ textAlign: "left" }}>
+              <label htmlFor="jobDescription" style={{ fontWeight: "600", display: "block", marginBottom: "8px", color: "#e2e8f0" }}>
+                Job Description (Optional)
+              </label>
+              <textarea
+                id="jobDescription"
+                className="custom-textarea"
+                value={jobDesc}
+                onChange={(e) => setJobDesc(e.target.value)}
+                placeholder="Paste the job description here..."
+                style={{ width: '100%', minHeight: '100px', padding: '12px', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.02)', color: 'inherit', border: '1px solid rgba(255, 255, 255, 0.1)' }}
+              />
+              {/* The Live Counter */}
+              <div style={{ 
+                textAlign: 'right', 
+                color: isOver ? '#ef4444' : (isClose ? '#f97316' : 'inherit'),
+                opacity: isOver || isClose ? 1 : 0.7,
+                fontSize: '0.85rem',
+                marginTop: '5px',
+                fontWeight: isOver ? 'bold' : 'normal'
+              }}>
+                {jobDesc.length} / {MAX_CHARS} characters
+              </div>
+            </div>
+          </div>
+
+          {/* STEP 3: Action Buttons */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "center", alignItems: "center" }} className="mb-4">
+            <button
+              className="analyze-btn"
+              onClick={uploadResume}
+              disabled={loading}
+              style={{
+                padding: "12px 36px",
+                fontSize: "var(--font-size-base)",
+                fontWeight: "700",
+                letterSpacing: "0.5px",
+                backgroundColor: "#6366f1",
+                color: "#fff",
+                border: "none",
+                borderRadius: "var(--radius-md)",
+                cursor: "pointer",
+                boxShadow: "var(--shadow-card)",
+                transition: "transform 0.2s ease, background-color 0.2s ease",
+                flex: "1 1 200px",
+                minHeight: "44px",
+                maxWidth: "280px"
+              }}
+            >
+              {loading && analysisSource === "upload" ? "⏳ Processing..." : "🚀 Analyze Resume"}
+            </button>
+            
+            <button
+              className="secondary-btn"
+              onClick={handleSampleResume}
+              disabled={loading}
+              type="button"
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "var(--btn-secondary-text)",
+                fontSize: "var(--font-size-sm)",
+                textDecoration: "underline",
+                cursor: "pointer",
+                minHeight: "44px",
+                flex: "1 1 200px",
+                maxWidth: "280px"
+              }}
+            >
+              {loading && analysisSource === "sample" ? "⏳ Loading..." : "Try Sample Resume"}
+            </button>
+          </div>
+
 
           <div className={score === null && !loading ? "hero-container" : ""}>
             <div className={score === null && !loading ? "hero-left" : ""}>
@@ -535,7 +666,6 @@ function App() {
                 <p style={{ fontSize: "13px", opacity: 0.7, marginTop: "-8px", wordBreak: "break-all" }}>📄 {activeFileName}</p>
               )}
 
-              {/* Skills container */}
               <div className="mt-4">
                 <h4>Skills Found ({skills.length})</h4>
                 {skills.length === 0 && <p>No skills detected</p>}
@@ -603,7 +733,7 @@ function App() {
                         type="button"
                         className={`app-btn app-btn--accent${copied ? " is-success" : ""}`}
                         onClick={copySuggestionsToClipboard}
-                        style={{ padding: "8px 16px", fontSize: "13px", minHeight: "44px" }}
+                        style={{ minHeight: "44px", padding: "8px 16px", fontSize: "13px" }}
                       >
                         {copied ? "✅ Copied!" : "📋 Copy All"}
                       </button>
@@ -662,7 +792,6 @@ function App() {
                   </div>
                 )}
 
-                {/* Reset Button */}
                 <div style={{ marginTop: "24px", textAlign: "center" }}>
                   <button
                     type="button"
@@ -728,9 +857,8 @@ function App() {
   ); 
 }
 
-      <Footer />
+      <Footer /> 
 
-      {/* RENDER FLOATING BACK TO TOP BUTTON */}
       {showBackToTop && (
         <button
           onClick={scrollToTop}

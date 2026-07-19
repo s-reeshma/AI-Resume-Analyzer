@@ -25,7 +25,7 @@ ROLE_SKILLS = {
 }
 
 
-def analyze_resume(file_path, target_role, file_name="resume.pdf", user_id=None):
+def analyze_resume(file_path, target_role, file_name="resume.pdf",user_id=None,job_description=None):
 
     text = ""
 
@@ -73,6 +73,7 @@ def analyze_resume(file_path, target_role, file_name="resume.pdf", user_id=None)
                 user=user,
                 file_name=file_name,          
                 target_role=target_role,
+                job_description=job_description,
                 defaults={
                     'score': score,
                     'skills_found': detected,
