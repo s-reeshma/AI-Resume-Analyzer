@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import "./index.css";
 import { AtsScore } from "./AtsScore";
@@ -11,6 +11,7 @@ import AnalysisSkeleton from "./components/AnalysisSkeleton/AnalysisSkeleton";
 import { InfoTooltip } from "./components/InfoTooltip";
 import { Navbar } from "./components/Navbar";
 import EmptyState from "./components/EmptyState";
+import { OnboardingTour } from "./components/OnboardingTour";
 
 type Theme = "light" | "dark";
 
@@ -57,6 +58,45 @@ function ResumePreview({ text, skills }: { text: string; skills: string[] }) {
     </div>
   );
 }
+
+interface SuggestionCardProps {
+  text: string;
+  index: number;
+}
+
+const SuggestionCard: React.FC<SuggestionCardProps> = ({ text, index }) => {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="suggestion-card">
+      <div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+          <span style={{ fontSize: "16px" }}>💡</span>
+          <span style={{ fontSize: "12px", fontWeight: "700", color: "#a5b4fc", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            Recommendation #{index + 1}
+          </span>
+        </div>
+        <p style={{ margin: 0, fontSize: "var(--font-size-sm)", color: "#e2e8f0", lineHeight: "1.6" }}>
+          {text}
+        </p>
+      </div>
+      
+      <button 
+        onClick={handleCopy} 
+        className="suggestion-copy-btn"
+        aria-label="Copy recommendation text"
+      >
+        {copied ? "✅ Copied" : "📋 Copy Text"}
+      </button>
+    </div>
+  );
+};
 
 function App() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
@@ -347,11 +387,16 @@ function App() {
   };
 
   const handleLogout = () => {
+    logout();           
+    clearHistory();
+  };
+
     logout();          
     clearHistory();
   };
   return (
     <>
+      <OnboardingTour />
       <HistorySidebar
         entries={entries}
         activeFileName={activeFileName}
@@ -607,6 +652,27 @@ function App() {
                 </div>
               </div>
 
+              {/* Upgraded Modern Suggestions Section */}
+              <div className="mt-5 p-4" style={{ background: "rgba(30, 30, 47, 0.4)", borderRadius: "var(--radius-lg)", border: "1px solid rgba(255, 255, 255, 0.04)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+                  <div style={{ textAlign: "left" }}>
+                    <h4 style={{ margin: "0 0 4px 0", fontSize: "var(--font-size-base)", color: "#fff" }}>
+                      💡 Dynamic Profile Optimization Suggestions
+                    </h4>
+                    <p style={{ margin: 0, fontSize: "var(--font-size-sm)", color: "#64748b" }}>
+                      Actionable revisions targeted at elevating scanning compatibility ranks.
+                    </p>
+                  </div>
+                  {suggestions.length > 0 && (
+                    <button
+                      type="button"
+                      className={`app-btn app-btn--accent${copied ? " is-success" : ""}`}
+                      onClick={copySuggestionsToClipboard}
+                      style={{ padding: "8px 16px", fontSize: "13px" }}
+                    >
+                      {copied ? "✅ Copied!" : "📋 Copy All"}
+                    </button>
+                  )}
               {/* SUGGESTIONS BOX WITH THE UTILITY BUTTON */}
               <div className="suggestion-box mt-4" style={{ padding: "15px" }}>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
@@ -673,6 +739,21 @@ function App() {
                 </div>
                 
 
+                {suggestions.length === 0 ? (
+                  <p style={{ color: "#64748b", fontStyle: "italic", fontSize: "var(--font-size-sm)", textAlign: "left", margin: "16px 0 0 0" }}>
+                    No actionable layout suggestions generated for the current profile structure matrix.
+                  </p>
+                ) : (
+                  <div className="suggestions-grid">
+                    {suggestions.map((suggestion, index) => (
+                      <SuggestionCard 
+                        key={index} 
+                        text={suggestion} 
+                        index={index} 
+                      />
+                    ))}
+                  </div>
+                )}
                 {suggestions.map((s: string, i: number) => (
                   <div key={i} className="suggestion-item" style={{ wordBreak: "break-word", textAlign: "left" }}>📌 {s}</div>
                 ))}
@@ -695,6 +776,10 @@ function App() {
       </div> {/* closes .container */}
 
       <Footer />  {/* footer should be outside main container */}
+
+    </>
+  ); 
+}
 
 
       {/* RENDER FLOATING BACK TO TOP BUTTON */}
@@ -729,5 +814,4 @@ function App() {
     </>
   ); /* closes the return fragment */
 } /* closes App function */
-
 export default App;
