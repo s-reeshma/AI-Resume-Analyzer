@@ -37,7 +37,10 @@ type Theme = "light" | "dark";
 const DEFAULT_TITLE = "AI Resume Analyzer";
 const READY_TITLE = "✅ Analysis Ready — AI Resume Analyzer";
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 7ae27ca (feat: handle 429 rate limiting with retry countdown)
 function getInitialTheme(): Theme {
   try {
     const saved = localStorage.getItem("theme");
@@ -232,6 +235,8 @@ function App() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [retryAfter, setRetryAfter] = useState<number | null>(null);
+  const [retryDisabled, setRetryDisabled] = useState(false);
   const [score, setScore] = useState<number | null>(null);
   const [skills, setSkills] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -363,7 +368,11 @@ function App() {
 }, []);
 
 
+<<<<<<< HEAD
   // Reset analysis helper with Undo snapshotting
+=======
+  // Reset analysis helper
+>>>>>>> 7ae27ca (feat: handle 429 rate limiting with retry countdown)
   const resetAnalysis = useCallback(() => {
     if (score !== null || skills.length > 0) {
       setUndoState({
@@ -458,7 +467,12 @@ function App() {
     });
   };
 
+<<<<<<< HEAD
   const runAnalysis = async (fileToAnalyze: File | null, source: "sample" | "upload", url?: string) => {
+=======
+  const runAnalysis = async (fileToAnalyze: File, source: "sample" | "upload") => {
+
+>>>>>>> 7ae27ca (feat: handle 429 rate limiting with retry countdown)
     try {
       setLoading(true);
       setAnalysisSource(source);
@@ -508,6 +522,11 @@ function App() {
          document.title = READY_TITLE;
       }
 
+      // Change the browser tab title only if the user is on another tab
+      if (document.hidden) {
+         document.title = READY_TITLE;
+      }
+
       setLoading(false);
 
       if (user) {
@@ -530,12 +549,53 @@ function App() {
       console.error(error);
       let errorMsg = "Unknown error";
       if (axios.isAxiosError(error)) {
-        errorMsg = error.response?.data?.error ?? error.message;
-      } else if (error instanceof Error) {
-        errorMsg = error.message;
-      }
-      alert(source === "sample" ? `Sample analysis failed: ${errorMsg}` : `Upload failed: ${errorMsg}`);
-      setLoading(false);
+
+    if (error.response?.status === 429) {
+
+        const retryHeader =
+            error.response.headers["retry-after"];
+
+        const retrySeconds =
+            Number(retryHeader) || Number(error.response.data?.retry_after) || 30;
+
+        setRetryAfter(retrySeconds);
+        setRetryDisabled(true);
+
+        let remaining = retrySeconds;
+
+        const timer = setInterval(() => {
+
+            remaining--;
+
+            setRetryAfter(remaining);
+
+            if (remaining <= 0) {
+                clearInterval(timer);
+                setRetryDisabled(false);
+                setRetryAfter(null);
+            }
+
+        }, 1000);
+
+        errorMsg =
+            `Too many requests. Please wait ${retrySeconds}s before trying again.`;
+
+        } else {
+
+        errorMsg =
+            error.response?.data?.error ?? error.message;
+
+       }
+     }
+    if (!(axios.isAxiosError(error) &&error.response?.status === 429)) {
+       alert(
+         source === "sample"
+            ? `Sample analysis failed: ${errorMsg}`
+            : `Upload failed: ${errorMsg}`
+  );
+}
+
+setLoading(false);
     }
   };
 
@@ -982,7 +1042,7 @@ function App() {
                   <button
                     className="analyze-btn"
                     onClick={uploadResume}
-                    disabled={loading}
+                    disabled={loading || retryDisabled}
                     style={{ minHeight: "44px", flex: "1 1 200px", maxWidth: "100%" }}
                   >
                     {loading && analysisSource === "upload" ? "⏳ Extracting..." : "🚀 Analyze Resume"}
@@ -991,7 +1051,7 @@ function App() {
                   <button
                     className="secondary-btn"
                     onClick={handleSampleResume}
-                    disabled={loading}
+                    disabled={loading || retryDisabled}
                     type="button"
                     style={{ minHeight: "44px", flex: "1 1 200px", maxWidth: "100%" }}
                   >
@@ -1004,6 +1064,18 @@ function App() {
                     )}
                   </button>
                 </div>
+                {retryDisabled && retryAfter !== null && (
+                  <p
+                    style={{
+                      color: "#ef4444",
+                      marginTop: "10px",
+                      fontWeight: 600,
+                      textAlign: "center",
+                }}
+              >
+                 Too many requests. Please wait {retryAfter}s before trying again.
+                </p>
+             )}
               </div>
             </div>
 
