@@ -261,21 +261,6 @@ function App() {
   const [resumeUrl, setResumeUrl] = useState<string>("");
   const [urlError, setUrlError] = useState<string | null>(null);
 
-  // Undo Reset State
-  const [undoState, setUndoState] = useState<{
-    file: File | null;
-    score: number | null;
-    skills: string[];
-    suggestions: string[];
-    matchedSkills: string[];
-    missingSkills: string[];
-    resumeText: string;
-    analysisSource: "sample" | "upload" | null;
-    activeFileName: string;
-    targetRole: string;
-  } | null>(null);
-  const [showUndoToast, setShowUndoToast] = useState(false);
-
   let currentStep: 1 | 2 | 3 = 1;
   if (loading) {
     currentStep = 2;
