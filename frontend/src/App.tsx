@@ -28,6 +28,7 @@ import { OnboardingTour } from "./components/OnboardingTour";
 import { HowItWorks } from "./components/HowItWorks";
 import { CompareVersions } from "./components/CompareVersions/CompareVersions";
 import { SkillChip } from "./components/SkillChip";
+import { requestNotificationPermission, sendAnalysisCompleteNotification } from "./utils/notification";
 
 type Theme = "light" | "dark";
 
@@ -333,6 +334,9 @@ function App() {
           fileName: fileToAnalyze.name,
         });
       }
+
+      // Send native browser notification if tab is hidden / unfocused
+      sendAnalysisCompleteNotification(fileToAnalyze.name);
     } catch (error: any) {
       console.error(error);
       let errorMsg = "Unknown error";
@@ -365,11 +369,13 @@ function App() {
 
     if (hasError) return;
 
+    await requestNotificationPermission();
     await runAnalysis(file!, "upload");
   };
 
   const handleSampleResume = async () => {
     try {
+      await requestNotificationPermission();
       setLoading(true);
       setAnalysisSource("sample");
       const response = await fetch("/sample-resume.pdf");
