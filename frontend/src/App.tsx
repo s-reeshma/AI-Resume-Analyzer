@@ -429,7 +429,11 @@ function App() {
       setLoading(true);
       setAnalysisSource(source);
       setAnalysisProgress(25);
+<<<<<<< HEAD
       setAnalysisStageLabel(url ? "Fetching document from URL..." : "Stage 1/3: Extracting text from document...");
+=======
+      setAnalysisStageLabel("Stage 1/3: Extracting text from document...");
+>>>>>>> upstream/main
 
       const formData = new FormData();
       if (fileToAnalyze) {
@@ -444,12 +448,20 @@ function App() {
       const stageTimer1 = setTimeout(() => {
         setAnalysisProgress(60);
         setAnalysisStageLabel("Stage 2/3: Detecting & matching skills...");
+<<<<<<< HEAD
       }, 500);
+=======
+      }, 400);
+>>>>>>> upstream/main
 
       const stageTimer2 = setTimeout(() => {
         setAnalysisProgress(90);
         setAnalysisStageLabel("Stage 3/3: Generating ATS score & recommendations...");
+<<<<<<< HEAD
       }, 1000);
+=======
+      }, 900);
+>>>>>>> upstream/main
 
       const headers = user ? { Authorization: `Bearer ${user.token}` } : {};
       const res = await axios.post(`${backendUrl}/api/upload/`, formData, { headers });
