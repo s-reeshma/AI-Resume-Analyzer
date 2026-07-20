@@ -1,7 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import "./index.css";
 import { AtsScore } from "./AtsScore";
+import { useAnalysisHistory, type AnalysisEntry } from "./hooks/useAnalysisHistory";
+import { HistorySidebar } from "./HistorySidebar";
+import { useAuth } from "./hooks/useAuth";
+import { AuthModal } from "./AuthModal";
+import { Footer } from "./Footer";
+import { requestNotificationPermission, sendAnalysisCompleteNotification } from "./utils/notification";
 
 type Theme = "light" | "dark";
 
@@ -32,6 +38,46 @@ function App() {
   const [missingSkills, setMissingSkills] = useState<string[]>([]);
   const [showAllSkills, setShowAllSkills] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [analysisSource, setAnalysisSource] = useState<"sample" | "upload" | null>(null);
+
+  // Auth
+  const { user, signup, login, logout } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // History
+  const { entries, addEntry, deleteEntry, clearHistory, setEntries } = useAnalysisHistory();
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [activeFileName, setActiveFileName] = useState("");
+
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
+
+  const fetchDbHistory = useCallback(async (token: string) => {
+    try {
+      const res = await axios.get(`${backendUrl}/api/history/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const dbEntries: AnalysisEntry[] = res.data.map((item: {
+        id: number; file_name: string; score: number; skills_found: string[];
+        suggestions: string[]; matched_skills: string[]; missing_skills: string[];
+        target_role: string; created_at: string;
+      }) => ({
+        id: String(item.id),
+        timestamp: new Date(item.created_at).getTime(),
+        score: item.score,
+        skills: item.skills_found,
+        suggestions: item.suggestions,
+        matchedSkills: item.matched_skills,
+        missingSkills: item.missing_skills,
+        targetRole: item.target_role,
+        fileName: item.file_name,
+      }));
+      setEntries(dbEntries);
+    } catch { /* silently ignore */ }
+  }, [backendUrl, setEntries]);
+
+  useEffect(() => {
+    if (user) fetchDbHistory(user.token);
+  }, [user, fetchDbHistory]);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -46,33 +92,100 @@ function App() {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
+  const runAnalysis = async (fileToAnalyze: File, source: "sample" | "upload") => {
+    try {
+      setLoading(true);
+      setAnalysisSource(source);
+      setActiveFileName(fileToAnalyze.name);
+
+      const formData = new FormData();
+      formData.append("file", fileToAnalyze);
+      formData.append("role", targetRole);
+
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
+      const headers = user ? { Authorization: `Bearer ${user.token}` } : {};
+      const res = await axios.post(`${backendUrl}/api/upload/`, formData, { headers });
+
+      const taskId = res.data.task_id;
+      
+      // Start polling
+      const pollInterval = setInterval(async () => {
+        try {
+          const statusRes = await axios.get(`${backendUrl}/api/task-status/${taskId}/`);
+          if (statusRes.data.status === 'SUCCESS') {
+            clearInterval(pollInterval);
+            const result = statusRes.data.result;
+            setScore(result.score);
+            setSkills(result.skills_found);
+            setSuggestions(result.suggestions);
+            setMatchedSkills(result.matched_skills || []);
+            setMissingSkills(result.missing_skills || []);
+            setLoading(false);
+
+            // Add history entry
+            if (!user) {
+              addEntry({
+                score: result.score,
+                skills: result.skills_found,
+                suggestions: result.suggestions,
+                matchedSkills: result.matched_skills || [],
+                missingSkills: result.missing_skills || [],
+                targetRole,
+                fileName: fileToAnalyze.name,
+              });
+            } else {
+              fetchDbHistory(user.token);
+            }
+
+            // Send native browser notification if tab is hidden / unfocused
+            sendAnalysisCompleteNotification(fileToAnalyze.name);
+          } else if (statusRes.data.status === 'FAILURE') {
+            clearInterval(pollInterval);
+            console.error(statusRes.data.error);
+            alert("Analysis failed.");
+            setLoading(false);
+          }
+        } catch (pollErr) {
+          clearInterval(pollInterval);
+          console.error(pollErr);
+          alert("Error checking task status.");
+          setLoading(false);
+        }
+      }, 2000);
+
+    } catch (error: any) {
+      console.error(error);
+      const errorMsg = error.response?.data?.error || error.message || "Unknown error";
+      alert(source === "sample" ? `Sample analysis failed: ${errorMsg}` : `Upload failed: ${errorMsg}`);
+      setLoading(false);
+    }
+  };
+
   const uploadResume = async () => {
     if (!file) {
       alert("Please upload resume");
       return;
     }
+    await requestNotificationPermission();
+    await runAnalysis(file, "upload");
+  };
 
+  const handleSampleResume = async () => {
     try {
-      setLoading(true);   
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("role", targetRole);
-
-      const res = await axios.post(
-        "http://127.0.0.1:8000/api/upload/",
-        formData
-      );
-
-      setScore(res.data.score);
-      setSkills(res.data.skills_found);
-      setSuggestions(res.data.suggestions);
-      setMatchedSkills(res.data.matched_skills || []);
-      setMissingSkills(res.data.missing_skills || []);
-      setLoading(false);   
-    } catch (error) {
+      await requestNotificationPermission();
+      setLoading(true);
+      setAnalysisSource("sample");
+      const response = await fetch("/sample-resume.pdf");
+      if (!response.ok) {
+        throw new Error("Failed to load sample resume PDF");
+      }
+      const blob = await response.blob();
+      const sampleFile = new File([blob], "sample-resume.pdf", { type: "application/pdf" });
+      await runAnalysis(sampleFile, "sample");
+    } catch (error: any) {
       console.error(error);
-      alert("Upload failed");
-      setLoading(false);   
+      alert("Could not load sample resume");
+      setLoading(false);
     }
   };
 
@@ -87,18 +200,60 @@ function App() {
       .catch((err) => console.error("Failed to copy text: ", err));
   };
 
+  const selectHistoryEntry = (entry: AnalysisEntry) => {
+    setScore(entry.score);
+    setSkills(entry.skills);
+    setSuggestions(entry.suggestions);
+    setMatchedSkills(entry.matchedSkills);
+    setMissingSkills(entry.missingSkills);
+    setTargetRole(entry.targetRole);
+    setActiveFileName(entry.fileName);
+    setShowAllSkills(false);
+    setCopied(false);
+    setHistoryOpen(false);
+  };
+
   return (
-    <div className="container mt-5">
+    <>
+      <HistorySidebar
+        entries={entries}
+        onSelect={selectHistoryEntry}
+        onDelete={deleteEntry}
+        onClear={clearHistory}
+        isOpen={historyOpen}
+        onToggle={() => setHistoryOpen((v) => !v)}
+      />
+      <div className="container mt-5">
       <div className="main-card text-center">
         <button
           type="button"
-          className="theme-toggle-btn"
+          className="app-btn theme-toggle-btn"
           onClick={toggleTheme}
           aria-label="Toggle theme"
           aria-pressed={theme === "dark"}
         >
           {theme === "light" ? "🌙 Dark Mode" : "☀️ Light Mode"}
         </button>
+
+        {/* Auth bar */}
+        <div className="auth-bar">
+          {user ? (
+            <>
+              <span className="auth-username">👤 {user.username}</span>
+              <button className="auth-bar-btn" onClick={logout}>Logout</button>
+            </>
+          ) : (
+            <button className="auth-bar-btn" onClick={() => setShowAuthModal(true)}>🔐 Login / Sign Up</button>
+          )}
+        </div>
+
+        {showAuthModal && (
+          <AuthModal
+            onSignup={signup}
+            onLogin={login}
+            onClose={() => setShowAuthModal(false)}
+          />
+        )}
 
         <h1 className="mb-4">🚀 AI Resume Analyzer</h1>
 
@@ -133,17 +288,43 @@ function App() {
           </label>
         </div>
 
-        <button className="analyze-btn" onClick={uploadResume}>
-          {loading ? "⏳ Analyzing..." : "🚀 Analyze Resume"}
-        </button>
+        <div style={{ display: "flex", gap: "12px", justifyContent: "center", alignItems: "center" }} className="mb-3">
+          <button 
+            className="analyze-btn" 
+            onClick={uploadResume}
+            disabled={loading}
+          >
+            {loading && analysisSource === "upload" ? "⏳ Extracting and analyzing resume text..." : "🚀 Analyze Resume"}
+          </button>
+          <button 
+            className="secondary-btn" 
+            onClick={handleSampleResume}
+            disabled={loading}
+            type="button"
+          >
+            {loading && analysisSource === "sample" ? "⏳ Loading Sample..." : "Try Sample Resume"}
+          </button>
+        </div>
 
         {score !== null && (
           <>
+            {analysisSource === "sample" && (
+              <div className="sample-notice-banner mb-4">
+                <span>ℹ️ Viewing Sample Resume Analysis</span>
+                <span style={{ fontWeight: "normal", fontSize: "13px" }}>
+                  — This analysis is based on a bundled sample resume.
+                </span>
+              </div>
+            )}
+
             <AtsScore score={score} />
 
             <h5 className="analysis-done">
               ✅ Resume Analysis Complete
             </h5>
+            {activeFileName && (
+              <p style={{ fontSize: "13px", opacity: 0.7, marginTop: "-8px" }}>📄 {activeFileName}</p>
+            )}
 
             {/* SKILLS CONTAINER */}
             <div className="mt-4">
@@ -156,19 +337,10 @@ function App() {
               </div>
               {skills.length > 15 && (
                 <button
+                  type="button"
+                  className="app-btn app-btn--secondary"
+                  style={{ marginTop: "16px" }}
                   onClick={() => setShowAllSkills(!showAllSkills)}
-                  style={{
-                    marginTop: "16px",
-                    background: "rgba(255, 255, 255, 0.15)",
-                    color: "#ffffff",
-                    border: "1px solid rgba(255, 255, 255, 0.3)",
-                    padding: "6px 16px",
-                    borderRadius: "20px",
-                    cursor: "pointer",
-                    fontWeight: "600",
-                    fontSize: "13px",
-                    transition: "all 0.2s ease"
-                  }}
                 >
                   {showAllSkills ? "Show Less ▲" : `Show More (${skills.length - 15} more) ▼`}
                 </button>
@@ -200,18 +372,9 @@ function App() {
                 <h4 style={{ margin: 0 }}>💡 Suggestions</h4>
                 {suggestions.length > 0 && (
                   <button
+                    type="button"
+                    className={`app-btn app-btn--accent${copied ? " is-success" : ""}`}
                     onClick={copySuggestionsToClipboard}
-                    style={{
-                      backgroundColor: copied ? "#22c55e" : "#3b82f6",
-                      color: "white",
-                      border: "none",
-                      padding: "6px 12px",
-                      borderRadius: "6px",
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      transition: "background-color 0.2s ease"
-                    }}
                   >
                     {copied ? "✅ Copied!" : "📋 Copy Suggestions"}
                   </button>
@@ -224,7 +387,10 @@ function App() {
           </>
         )}
       </div>
+
+      <Footer />
     </div>
+    </>
   );
 }
 
