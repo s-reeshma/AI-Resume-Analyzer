@@ -33,6 +33,10 @@ import { ProgressBar } from "./components/ProgressBar/ProgressBar";
 
 type Theme = "light" | "dark";
 
+const DEFAULT_TITLE = "AI Resume Analyzer";
+const READY_TITLE = "✅ Analysis Ready — AI Resume Analyzer";
+
+
 function getInitialTheme(): Theme {
   try {
     const saved = localStorage.getItem("theme");
@@ -243,6 +247,24 @@ function App() {
     } catch { }
   }, [theme]);
 
+  useEffect(() => {
+  const handleVisibilityChange = () => {
+    if (!document.hidden) {
+      document.title = DEFAULT_TITLE;
+    }
+  };
+
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+
+  return () => {
+    document.removeEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+  };
+}, []);
+
+
   // Reset analysis helper
   const resetAnalysis = useCallback(() => {
     setFile(null);
@@ -350,6 +372,11 @@ function App() {
       const fileName = fileToAnalyze ? fileToAnalyze.name : (url ? "Imported Resume" : "Resume");
       setActiveFileName(fileName);
 
+      // Change the browser tab title only if the user is on another tab
+      if (document.hidden) {
+         document.title = READY_TITLE;
+      }
+
       setLoading(false);
 
       if (user) {
@@ -367,7 +394,11 @@ function App() {
       }
 
       // Send native browser notification if tab is hidden / unfocused
+<<<<<<< HEAD
       sendAnalysisCompleteNotification(fileName);
+=======
+      sendAnalysisCompleteNotification(fileToAnalyze.name);
+>>>>>>> upstream/main
     } catch (error: any) {
       console.error(error);
       let errorMsg = "Unknown error";
@@ -413,11 +444,15 @@ function App() {
     if (hasError) return;
 
     await requestNotificationPermission();
+<<<<<<< HEAD
     if (uploadMode === "file") {
       await runAnalysis(file!, "upload");
     } else {
       await runAnalysis(null, "upload", resumeUrl.trim());
     }
+=======
+    await runAnalysis(file!, "upload");
+>>>>>>> upstream/main
   };
 
   const handleSampleResume = async () => {
