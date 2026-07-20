@@ -5,7 +5,7 @@
 [![Last Commit](https://img.shields.io/github/last-commit/Muskankr/AI-Resume-Analyzer?style=for-the-badge)](https://github.com/Muskankr/AI-Resume-Analyzer/commits/main)
 [![Build](https://img.shields.io/github/actions/workflow/status/Muskankr/AI-Resume-Analyzer/ci.yml?style=for-the-badge)](...)
 [![GitHub stars](https://img.shields.io/github/stars/Muskankr/AI-Resume-Analyzer?style=for-the-badge&color=fbbf24)](https://github.com/Muskankr/AI-Resume-Analyzer/stargazers)
-![Forks](https://img.shields.io/github/forks/Muskankr/AI-Resume-Analyzer?style=for-the-badge)
+[![GitHub forks](https://img.shields.io/github/forks/Muskankr/AI-Resume-Analyzer?style=for-the-badge&color=34d399)](https://github.com/Muskankr/AI-Resume-Analyzer/network/members)
 [![GitHub contributors](https://img.shields.io/github/contributors/Muskankr/AI-Resume-Analyzer?style=for-the-badge&color=818cf8)](https://github.com/Muskankr/AI-Resume-Analyzer/graphs/contributors)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge&color=38bdf8)](https://github.com/Muskankr/AI-Resume-Analyzer/pulls)
 [![ECSoC'26](https://img.shields.io/badge/Program-ECSoC'26-orange?style=for-the-badge)](https://github.com/Muskankr/AI-Resume-Analyzer)
@@ -32,9 +32,9 @@
 ![PDFPlumber](https://img.shields.io/badge/PDFPlumber-PDF_Parser-orange?style=for-the-badge)
 ![CORS](https://img.shields.io/badge/django--cors--headers-CORS-green?style=for-the-badge)
 
-<p align="center">
+<p align="center>
   <a href="#key-features">Key Features</a> •
-  <a href="#project-preview">Project Preview</a> •
+  <a href="#project-preview">Project Preview</a> •pm tun
   <a href="#architecture--data-flow">Architecture</a> •
   <a href="#tech-stack">Tech Stack</a> •
   <a href="#installation--setup">Installation & Setup</a> •
@@ -330,6 +330,17 @@ We welcome contributions of all levels under the **ECSoC'26** program!
 4. Push changes to your fork and create a **Pull Request (PR)** targeting the upstream `main` branch.
 
 Please review active issues before creating duplicates, and always link open issues to your Pull Request!
+
+---
+
+## Code Owners
+
+This repository uses a [`CODEOWNERS`](.github/CODEOWNERS) file to automatically request reviews from maintainers whenever a Pull Request is opened.
+
+- The file lives at `.github/CODEOWNERS`.
+- Currently, all files (`*`) are owned by [@Muskankr](https://github.com/Muskankr).
+- When you open a PR, GitHub will automatically add the code owner as a reviewer.
+- As the project grows, ownership can be split by folder (e.g. `/frontend/` → frontend maintainers, `/backend/` → backend maintainers).
 
 ---
 
