@@ -394,11 +394,7 @@ function App() {
       }
 
       // Send native browser notification if tab is hidden / unfocused
-<<<<<<< HEAD
       sendAnalysisCompleteNotification(fileName);
-=======
-      sendAnalysisCompleteNotification(fileToAnalyze.name);
->>>>>>> upstream/main
     } catch (error: any) {
       console.error(error);
       let errorMsg = "Unknown error";
@@ -444,15 +440,11 @@ function App() {
     if (hasError) return;
 
     await requestNotificationPermission();
-<<<<<<< HEAD
     if (uploadMode === "file") {
       await runAnalysis(file!, "upload");
     } else {
       await runAnalysis(null, "upload", resumeUrl.trim());
     }
-=======
-    await runAnalysis(file!, "upload");
->>>>>>> upstream/main
   };
 
   const handleSampleResume = async () => {
