@@ -30,6 +30,7 @@ import { CompareVersions } from "./components/CompareVersions/CompareVersions";
 import { SkillChip } from "./components/SkillChip";
 import { requestNotificationPermission, sendAnalysisCompleteNotification } from "./utils/notification";
 import { ProgressBar } from "./components/ProgressBar/ProgressBar";
+import { UndoToast } from "./components/UndoToast/UndoToast";
 
 type Theme = "light" | "dark";
 
@@ -362,8 +363,24 @@ function App() {
 }, []);
 
 
-  // Reset analysis helper
+  // Reset analysis helper with Undo snapshotting
   const resetAnalysis = useCallback(() => {
+    if (score !== null || skills.length > 0) {
+      setUndoState({
+        file,
+        score,
+        skills,
+        suggestions,
+        matchedSkills,
+        missingSkills,
+        resumeText,
+        analysisSource,
+        activeFileName,
+        targetRole,
+      });
+      setShowUndoToast(true);
+    }
+
     setFile(null);
     setScore(null);
     setSkills([]);
@@ -378,7 +395,24 @@ function App() {
     setShowExportDropdown(false);
     setFileError(null);
     setRoleError(null);
-  }, []);
+  }, [file, score, skills, suggestions, matchedSkills, missingSkills, resumeText, analysisSource, activeFileName, targetRole]);
+
+  const handleUndoReset = useCallback(() => {
+    if (undoState) {
+      setFile(undoState.file);
+      setScore(undoState.score);
+      setSkills(undoState.skills);
+      setSuggestions(undoState.suggestions);
+      setMatchedSkills(undoState.matchedSkills);
+      setMissingSkills(undoState.missingSkills);
+      setResumeText(undoState.resumeText);
+      setAnalysisSource(undoState.analysisSource);
+      setActiveFileName(undoState.activeFileName);
+      setTargetRole(undoState.targetRole);
+      setUndoState(null);
+      setShowUndoToast(false);
+    }
+  }, [undoState]);
 
   // Global Keyboard Shortcuts
   useEffect(() => {
@@ -429,11 +463,7 @@ function App() {
       setLoading(true);
       setAnalysisSource(source);
       setAnalysisProgress(25);
-<<<<<<< HEAD
       setAnalysisStageLabel(url ? "Fetching document from URL..." : "Stage 1/3: Extracting text from document...");
-=======
-      setAnalysisStageLabel("Stage 1/3: Extracting text from document...");
->>>>>>> upstream/main
 
       const formData = new FormData();
       if (fileToAnalyze) {
@@ -448,20 +478,12 @@ function App() {
       const stageTimer1 = setTimeout(() => {
         setAnalysisProgress(60);
         setAnalysisStageLabel("Stage 2/3: Detecting & matching skills...");
-<<<<<<< HEAD
       }, 500);
-=======
-      }, 400);
->>>>>>> upstream/main
 
       const stageTimer2 = setTimeout(() => {
         setAnalysisProgress(90);
         setAnalysisStageLabel("Stage 3/3: Generating ATS score & recommendations...");
-<<<<<<< HEAD
       }, 1000);
-=======
-      }, 900);
->>>>>>> upstream/main
 
       const headers = user ? { Authorization: `Bearer ${user.token}` } : {};
       const res = await axios.post(`${backendUrl}/api/upload/`, formData, { headers });
@@ -1324,6 +1346,18 @@ function App() {
             Press <kbd style={{ color: "#a5b4fc" }}>Esc</kbd> at any point to clear this helper overlay panel.
           </p>
         </div>
+      )}
+
+      {showUndoToast && (
+        <UndoToast
+          message="Analysis reset."
+          durationSeconds={5}
+          onUndo={handleUndoReset}
+          onClose={() => {
+            setShowUndoToast(false);
+            setUndoState(null);
+          }}
+        />
       )}
     </>
   );
