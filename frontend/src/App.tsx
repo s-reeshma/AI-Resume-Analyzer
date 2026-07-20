@@ -28,6 +28,8 @@ import { OnboardingTour } from "./components/OnboardingTour";
 import { HowItWorks } from "./components/HowItWorks";
 import { CompareVersions } from "./components/CompareVersions/CompareVersions";
 import { SkillChip } from "./components/SkillChip";
+import { requestNotificationPermission, sendAnalysisCompleteNotification } from "./utils/notification";
+import { ProgressBar } from "./components/ProgressBar/ProgressBar";
 
 type Theme = "light" | "dark";
 
@@ -151,6 +153,11 @@ function App() {
   const [activeFileName, setActiveFileName] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState<number>(0);
+  const [analysisStageLabel, setAnalysisStageLabel] = useState<string>("");
+  const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
+  const [resumeUrl, setResumeUrl] = useState<string>("");
+  const [urlError, setUrlError] = useState<string | null>(null);
 
   let currentStep: 1 | 2 | 3 = 1;
   if (loading) {
@@ -298,17 +305,41 @@ function App() {
     });
   };
 
-  const runAnalysis = async (fileToAnalyze: File, source: "sample" | "upload") => {
+  const runAnalysis = async (fileToAnalyze: File | null, source: "sample" | "upload", url?: string) => {
     try {
       setLoading(true);
       setAnalysisSource(source);
+      setAnalysisProgress(25);
+      setAnalysisStageLabel(url ? "Fetching document from URL..." : "Stage 1/3: Extracting text from document...");
+
       const formData = new FormData();
-      formData.append("file", fileToAnalyze);
+      if (fileToAnalyze) {
+        formData.append("file", fileToAnalyze);
+      }
+      if (url) {
+        formData.append("url", url);
+      }
       formData.append("role", targetRole);
       formData.append("job_description", jobDesc);
 
+      const stageTimer1 = setTimeout(() => {
+        setAnalysisProgress(60);
+        setAnalysisStageLabel("Stage 2/3: Detecting & matching skills...");
+      }, 500);
+
+      const stageTimer2 = setTimeout(() => {
+        setAnalysisProgress(90);
+        setAnalysisStageLabel("Stage 3/3: Generating ATS score & recommendations...");
+      }, 1000);
+
       const headers = user ? { Authorization: `Bearer ${user.token}` } : {};
       const res = await axios.post(`${backendUrl}/api/upload/`, formData, { headers });
+
+      clearTimeout(stageTimer1);
+      clearTimeout(stageTimer2);
+
+      setAnalysisProgress(100);
+      setAnalysisStageLabel("Analysis complete!");
 
       setScore(res.data.score);
       setSkills(res.data.skills_found || []);
@@ -316,7 +347,8 @@ function App() {
       setMatchedSkills(res.data.matched_skills || []);
       setMissingSkills(res.data.missing_skills || []);
       setResumeText(res.data.resume_text || "");
-      setActiveFileName(fileToAnalyze.name);
+      const fileName = fileToAnalyze ? fileToAnalyze.name : (url ? "Imported Resume" : "Resume");
+      setActiveFileName(fileName);
 
       setLoading(false);
 
@@ -330,9 +362,12 @@ function App() {
           matchedSkills: res.data.matched_skills || [],
           missingSkills: res.data.missing_skills || [],
           targetRole: targetRole,
-          fileName: fileToAnalyze.name,
+          fileName: fileName,
         });
       }
+
+      // Send native browser notification if tab is hidden / unfocused
+      sendAnalysisCompleteNotification(fileName);
     } catch (error: any) {
       console.error(error);
       let errorMsg = "Unknown error";
@@ -356,20 +391,38 @@ function App() {
       setRoleError(null);
     }
 
-    if (!file) {
-      setFileError("Please upload a resume file before analyzing.");
-      hasError = true;
+    if (uploadMode === "file") {
+      if (!file) {
+        setFileError("Please upload a resume file before analyzing.");
+        hasError = true;
+      } else {
+        setFileError(null);
+      }
     } else {
-      setFileError(null);
+      if (!resumeUrl || resumeUrl.trim() === "") {
+        setUrlError("Please enter a shareable link (Google Drive, Dropbox, or PDF URL).");
+        hasError = true;
+      } else if (!resumeUrl.trim().startsWith("http://") && !resumeUrl.trim().startsWith("https://")) {
+        setUrlError("URL must start with http:// or https://");
+        hasError = true;
+      } else {
+        setUrlError(null);
+      }
     }
 
     if (hasError) return;
 
-    await runAnalysis(file!, "upload");
+    await requestNotificationPermission();
+    if (uploadMode === "file") {
+      await runAnalysis(file!, "upload");
+    } else {
+      await runAnalysis(null, "upload", resumeUrl.trim());
+    }
   };
 
   const handleSampleResume = async () => {
     try {
+      await requestNotificationPermission();
       setLoading(true);
       setAnalysisSource("sample");
       const response = await fetch("/sample-resume.pdf");
@@ -495,156 +548,6 @@ function App() {
               onClose={() => setShowAuthModal(false)}
             />
           )}
- add-eslint-prettier-config
-          <h1 className="mb-4 app-main-title" style={{ fontSize: "calc(1.5rem + 1.5vw)", wordBreak: "break-word" }}>🚀 AI Resume Analyzer</h1>
-
-          <StepProgress currentStep={currentStep} />
-
-          {/* STEP 1: Role Selector Container */}
-          <div className="mb-4 d-flex flex-column align-items-center flex-sm-row justify-content-center role-selector-container" style={{ gap: "8px" }}>
-            <label htmlFor="roleSelect" className="role-select-label" style={{ fontWeight: "600" }}>
-              Target Career Track:
-            </label>
-            <div className="custom-select-container">
-          
-          <h1 className="mb-4 app-main-title" style={{ fontSize: "calc(1.5rem + 1.5vw)", wordBreak: "break-word" }}>
-            🚀 AI Resume Analyzer
-          </h1>
-
-          {/* STEP 1: Role Selector Container */}
-          <div className="mb-5 p-4" style={{ background: "rgba(255, 255, 255, 0.02)", borderRadius: "var(--radius-lg)", border: "1px solid rgba(255,255,255,0.04)" }}>
-            <label htmlFor="roleSelect" style={{ display: "block", marginBottom: "12px", fontWeight: "600", color: "#e2e8f0", fontSize: "var(--font-size-sm)" }}>
-              1️⃣ Choose your Target Career Track
-            </label>
-            <div className="custom-select-container" style={{ display: "flex", justifyContent: "center" }}>
-              <select
-                id="roleSelect"
-                value={targetRole}
-                onChange={(e) => setTargetRole(e.target.value)}
-                className="custom-select-element role-select-dropdown"
-                style={{ padding: "10px 16px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(255,255,255,0.15)", width: "100%", maxWidth: "320px", background: "#1e1e2f", color: "#fff", fontSize: "var(--font-size-sm)" }}
-              >
-                <option value="Frontend Developer">Frontend Developer</option>
-                <option value="Backend Developer">Backend Developer</option>
-                <option value="Data Analyst">Data Analyst</option>
-              </select>
-            </div>
-          </div>
-
-          {/* STEP 2: Upload Container */}
-          <div className="mb-5">
-            <div className="upload-box mb-3" style={{ width: "100%", maxWidth: "100%" }}>
-            <span style={{ display: "block", marginBottom: "12px", fontWeight: "600", color: "#e2e8f0", fontSize: "var(--font-size-sm)" }}>
-              2️⃣ Upload your Document & Job Details
-            </span>
-            <div className="upload-box mb-4" style={{ padding: "32px 20px", border: "2px dashed var(--upload-border)", borderRadius: "var(--radius-lg)", background: "var(--upload-bg)", transition: "all 0.3s ease" }}>
-              <input
-                type="file"
-                id="fileUpload"
-                hidden
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  if (e.target.files) setFile(e.target.files[0]);
-                }}
-              />
-              <label
-  htmlFor="fileUpload"
-  className="upload-label"
-  style={{
-    cursor: "pointer",
-    display: "block",
-    fontSize: "var(--font-size-base)",
-    wordBreak: "break-all",
-  }}
->
-  📄{" "}
-  {file ? (
-    <strong style={{ color: "#a5b4fc" }}>{file.name}</strong>
-  ) : (
-    "Drag & Drop Resume or Click to Browse"
-  )}
-</label>
-            </div>
-
-
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "center", alignItems: "center" }} className="mb-3">
-            <div className="mb-4" style={{ textAlign: "left" }}>
-              <label htmlFor="jobDescription" style={{ fontWeight: "600", display: "block", marginBottom: "8px", color: "#e2e8f0" }}>
-                Job Description (Optional)
-              </label>
-              <textarea
-                id="jobDescription"
-                className="custom-textarea"
-                value={jobDesc}
-                onChange={(e) => setJobDesc(e.target.value)}
-                placeholder="Paste the job description here..."
-                style={{ width: '100%', minHeight: '100px', padding: '12px', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.02)', color: 'inherit', border: '1px solid rgba(255, 255, 255, 0.1)' }}
-              />
-              {/* The Live Counter */}
-              <div style={{ 
-                textAlign: 'right', 
-                color: isOver ? '#ef4444' : (isClose ? '#f97316' : 'inherit'),
-                opacity: isOver || isClose ? 1 : 0.7,
-                fontSize: '0.85rem',
-                marginTop: '5px',
-                fontWeight: isOver ? 'bold' : 'normal'
-              }}>
-                {jobDesc.length} / {MAX_CHARS} characters
-              </div>
-            </div>
-          </div>
-
-          {/* STEP 3: Action Buttons */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "center", alignItems: "center" }} className="mb-4">
-            <button
-              className="analyze-btn"
-              onClick={uploadResume}
-              disabled={loading}
-              style={{
-                padding: "12px 36px",
-                fontSize: "var(--font-size-base)",
-                fontWeight: "700",
-                letterSpacing: "0.5px",
-                backgroundColor: "#6366f1",
-                color: "#fff",
-                border: "none",
-                borderRadius: "var(--radius-md)",
-                cursor: "pointer",
-                boxShadow: "var(--shadow-card)",
-                transition: "transform 0.2s ease, background-color 0.2s ease",
-                flex: "1 1 200px",
-                minHeight: "44px",
-                maxWidth: "280px"
-              }}
-            >
-              {loading && analysisSource === "upload" ? "⏳ Processing..." : "🚀 Analyze Resume"}
-            </button>
-            
-            <button
-              className="secondary-btn"
-              onClick={handleSampleResume}
-              disabled={loading}
-              type="button"
-              style={{
-                background: "transparent",
-                border: "none",
-                color: "var(--btn-secondary-text)",
-                fontSize: "var(--font-size-sm)",
-                textDecoration: "underline",
-                cursor: "pointer",
-                minHeight: "44px",
-                flex: "1 1 200px",
-                maxWidth: "280px"
-              }}
-            >
-              {loading && analysisSource === "sample" ? "⏳ Loading..." : "Or try with a sample resume"}
-              {loading && analysisSource === "sample"
-                ? <><Loader2 size={15} className="spin" /> Loading...</>
-                : "Try Sample Resume"}
-            </button>
-          </div>
-
-
- main
 
           <div className={score === null && !loading ? "hero-container" : ""}>
             <div className={score === null && !loading ? "hero-left" : ""}>
@@ -715,43 +618,126 @@ function App() {
                 )}
               </div>
 
-              {/* STEP 2: Upload File & Job Description */}
+              {/* STEP 2: Upload File / Link & Job Description */}
               <div className="mb-5">
-                <div
-                  className="upload-box mb-3"
-                  style={{ width: "100%", maxWidth: "100%", padding: "32px 20px" }}
-                >
-                  <input
-                    type="file"
-                    id="fileUpload"
-                    hidden
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setFile(e.target.files[0]);
-                        setFileError(null);
-                      }
+                {/* Mode Switcher Tabs */}
+                <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginBottom: "16px" }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUploadMode("file");
+                      setUrlError(null);
                     }}
-                  />
-                  <label
-                    htmlFor="fileUpload"
-                    className="upload-label"
                     style={{
+                      padding: "8px 16px",
+                      borderRadius: "var(--radius-md)",
+                      fontSize: "0.85rem",
+                      fontWeight: "600",
                       cursor: "pointer",
-                      display: "block",
-                      wordBreak: "break-all",
-                      fontSize: "var(--font-size-base)",
+                      background: uploadMode === "file" ? "#6366f1" : "rgba(255, 255, 255, 0.05)",
+                      color: "#fff",
+                      border: "1px solid rgba(255, 255, 255, 0.15)",
+                      transition: "all 0.2s ease",
                     }}
                   >
-                    📄{" "}
-                    {file ? (
-                      <strong style={{ color: "#a5b4fc" }}>{file.name}</strong>
-                    ) : (
-                      "Drag & Drop Resume or Click to Browse"
-                    )}
-                  </label>
+                    📄 Local File Upload
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUploadMode("url");
+                      setFileError(null);
+                    }}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "var(--radius-md)",
+                      fontSize: "0.85rem",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      background: uploadMode === "url" ? "#6366f1" : "rgba(255, 255, 255, 0.05)",
+                      color: "#fff",
+                      border: "1px solid rgba(255, 255, 255, 0.15)",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    🔗 Import via Link
+                  </button>
                 </div>
 
-                {fileError && (
+                {uploadMode === "file" ? (
+                  <div
+                    className="upload-box mb-3"
+                    style={{ width: "100%", maxWidth: "100%", padding: "32px 20px" }}
+                  >
+                    <input
+                      type="file"
+                      id="fileUpload"
+                      hidden
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setFile(e.target.files[0]);
+                          setFileError(null);
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor="fileUpload"
+                      className="upload-label"
+                      style={{
+                        cursor: "pointer",
+                        display: "block",
+                        wordBreak: "break-all",
+                        fontSize: "var(--font-size-base)",
+                      }}
+                    >
+                      📄{" "}
+                      {file ? (
+                        <strong style={{ color: "#a5b4fc" }}>{file.name}</strong>
+                      ) : (
+                        "Drag & Drop Resume or Click to Browse"
+                      )}
+                    </label>
+                  </div>
+                ) : (
+                  <div className="mb-3" style={{ textAlign: "left" }}>
+                    <label
+                      htmlFor="resumeUrlInput"
+                      style={{
+                        fontWeight: "600",
+                        display: "block",
+                        marginBottom: "8px",
+                        color: "#e2e8f0",
+                        fontSize: "0.85rem",
+                      }}
+                    >
+                      Paste Shareable Link (Google Drive / Dropbox / Direct PDF)
+                    </label>
+                    <input
+                      type="url"
+                      id="resumeUrlInput"
+                      value={resumeUrl}
+                      onChange={(e) => {
+                        setResumeUrl(e.target.value);
+                        if (e.target.value.trim() !== "") setUrlError(null);
+                      }}
+                      placeholder="https://drive.google.com/file/d/.../view?usp=sharing"
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        borderRadius: "var(--radius-md)",
+                        background: "rgba(255, 255, 255, 0.04)",
+                        color: "#fff",
+                        border: "1px solid rgba(255, 255, 255, 0.15)",
+                        fontSize: "0.9rem",
+                      }}
+                    />
+                    <span style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.6)", marginTop: "6px", display: "block" }}>
+                      ℹ️ Note: Make sure link permissions are set to "Anyone with the link can view".
+                    </span>
+                  </div>
+                )}
+
+                {fileError && uploadMode === "file" && (
                   <div
                     style={{
                       color: "#ef4444",
@@ -763,6 +749,21 @@ function App() {
                     }}
                   >
                     ⚠️ {fileError}
+                  </div>
+                )}
+
+                {urlError && uploadMode === "url" && (
+                  <div
+                    style={{
+                      color: "#ef4444",
+                      fontSize: "13px",
+                      marginTop: "4px",
+                      marginBottom: "16px",
+                      fontWeight: "500",
+                      textAlign: "center",
+                    }}
+                  >
+                    ⚠️ {urlError}
                   </div>
                 )}
 
@@ -855,8 +856,13 @@ function App() {
             )}
           </div>
 
-          {/* Loading Skeleton */}
-          {loading && <AnalysisSkeleton />}
+          {/* Loading Skeleton & Determinate Progress Bar */}
+          {loading && (
+            <div className="my-4">
+              <ProgressBar progress={analysisProgress} stageLabel={analysisStageLabel} />
+              <AnalysisSkeleton />
+            </div>
+          )}
 
           {/* Empty State / How It Works */}
           {score === null && !loading && (
