@@ -384,32 +384,54 @@ h3 { font-size: var(--text-md); }
   vertical-align: middle;
 }
 
-/* ── History Sidebar ────────────────────── */
+/* ── Floating Action Buttons (FAB Design System #247) ────── */
+.fab-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: var(--radius-round, 50%);
+  background: var(--card-bg, rgba(30, 30, 47, 0.85));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--card-text, #e2e8f0);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  line-height: 1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  user-select: none;
+}
+
+.fab-btn:hover {
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35), 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+
+.fab-btn:active {
+  transform: translateY(0) scale(0.96);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.fab-btn:focus-visible {
+  outline: 2px solid var(--score-accent, #6366f1);
+  outline-offset: 2px;
+}
+
 .history-toggle-btn {
   position: fixed;
   top: 10px;
   right: 20px;
   z-index: 1001;
-  background: var(--card-bg);
-  backdrop-filter: blur(10px);
-  color: var(--card-text);
-  border: 1px solid rgba(255,255,255,0.3);
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: var(--text-md);
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .history-toggle-btn:hover {
-  transform: scale(1.08);
+  color: var(--color-primary, #6366f1);
 }
 
 .history-badge {
@@ -789,24 +811,13 @@ h3 { font-size: var(--text-md); }
 /* ── Back to Top Button ──────────────────────── */
 .back-to-top {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 1002;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.3);
-  background: var(--btn-accent-bg);
-  color: var(--btn-accent-text);
-  font-size: var(--text-lg);
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  bottom: 76px;
+  right: 20px;
+  z-index: 9998;
   opacity: 0;
   transform: translateY(12px);
   pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease, background 0.2s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .back-to-top--visible {
@@ -815,11 +826,8 @@ h3 { font-size: var(--text-md); }
   pointer-events: auto;
 }
 
-.back-to-top:hover { background: var(--btn-accent-hover-bg); }
-
-.back-to-top:focus-visible {
-  outline: 2px solid var(--score-accent);
-  outline-offset: 2px;
+.back-to-top--visible:hover {
+  transform: translateY(-2px) scale(1.06);
 }
 
 .app-footer__links {
@@ -1292,33 +1300,18 @@ h3 { font-size: var(--text-md); }
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background: rgba(30, 30, 47, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #a5b4fc;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  font-weight: bold;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   z-index: 9999;
-  backdrop-filter: blur(8px);
-  transition: all 0.2s ease;
 }
 
 .shortcut-help-trigger:hover {
-  background: #6366f1;
-  color: #fff;
-  transform: scale(1.05);
+  background: var(--card-bg, rgba(30, 30, 47, 0.95));
+  color: var(--color-primary, #6366f1);
 }
 
 /* Floating Overlay Panel Box */
 .shortcut-overlay-card {
   position: fixed;
-  bottom: 70px;
+  bottom: 74px;
   right: 20px;
   background: #1e1e2f;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1687,4 +1680,87 @@ h3 { font-size: var(--text-md); }
     opacity: 1;
     transform: translateX(-50%) translateY(-8px);
   }
+}
+
+/* ── Target Career Track Custom Select (#261) ───────────────── */
+.custom-select-container {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-element {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 100%;
+  padding: 10px 40px 10px 16px;
+  font-size: var(--text-sm, 14px);
+  font-weight: 500;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+[data-theme="light"] .custom-select-element {
+  color: #0f172a;
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+/* Hover and Focus States */
+.custom-select-element:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .custom-select-element:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.custom-select-element:focus-visible,
+.custom-select-element:focus {
+  border-color: var(--color-primary, #6366f1);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+[data-theme="light"] .custom-select-element:focus-visible,
+[data-theme="light"] .custom-select-element:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+/* Custom dropdown chevron arrow matching Lucide styling */
+.custom-select-container::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%23a5b4fc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: opacity 0.2s;
+}
+
+[data-theme="light"] .custom-select-container::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%234f46e5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* Option styling inside dropdown menu */
+.custom-select-element option {
+  background: #1e1b4b;
+  color: #fff;
+}
+
+[data-theme="light"] .custom-select-element option {
+  background: #ffffff;
+  color: #0f172a;
 }
