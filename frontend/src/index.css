@@ -1166,6 +1166,17 @@ h3 { font-size: var(--text-md); }
   font-weight: 700;
   display: flex;
   align-items: center;
+  gap: 8px;
+  color: var(--card-text) !important;
+  text-decoration: none;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transition: color 0.3s ease;
+}
+
+.navbar-brand:hover,
+.navbar-brand:focus {
+  color: var(--card-text) !important;
 }
 
 .navbar-toggle {
