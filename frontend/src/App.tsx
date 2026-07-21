@@ -21,6 +21,8 @@ import {
   RefreshCw,
   Target,
   Info,
+  HelpCircle,
+  X,
 } from "lucide-react";
 import { Navbar } from "./components/Navbar";
 import EmptyState from "./components/EmptyState";
@@ -1384,26 +1386,27 @@ function App() {
     </Routes>
       {/* Floating Back to Top Button */ }
       <button
-  type="button"
-  className={`back-to-top${showBackToTop ? " back-to-top--visible" : ""}`}
-  onClick={scrollToTop}
-  aria-label="Back to top"
-  title="Back to top"
->
-  ↑
-</button>
+        type="button"
+        className={`fab-btn back-to-top${showBackToTop ? " back-to-top--visible" : ""}`}
+        onClick={scrollToTop}
+        aria-label="Back to top"
+        title="Back to top"
+      >
+        ↑
+      </button>
 
-  <Footer />
+      <Footer />
 
-{/* Keyboard Shortcuts Help Button & Overlay */ }
-<button
-  className="shortcut-help-trigger"
-  onClick={() => setShowShortcutHelp(!showShortcutHelp)}
-  title="Toggle Keyboard Shortcuts Help"
-  aria-label="Toggle keyboard shortcuts menu"
->
-  ?
-</button>
+      {/* Keyboard Shortcuts Help Button & Overlay */ }
+      <button
+        className="fab-btn shortcut-help-trigger"
+        onClick={() => setShowShortcutHelp(!showShortcutHelp)}
+        title="Toggle Keyboard Shortcuts Help"
+        aria-label="Toggle keyboard shortcuts help menu"
+        aria-expanded={showShortcutHelp}
+      >
+        {showShortcutHelp ? <X size={20} /> : <HelpCircle size={20} />}
+      </button>
 
 {
   showShortcutHelp && (
