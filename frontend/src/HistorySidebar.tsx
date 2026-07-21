@@ -1,12 +1,6 @@
- add-eslint-prettier-config
 import React, { useState, useEffect } from 'react'
 import { X, ClipboardList, BookOpen, GitCompare } from 'lucide-react'
 import type { AnalysisEntry } from './hooks/useAnalysisHistory'
-
-import React, { useState, useEffect } from "react";
-import { X, ClipboardList, BookOpen, Trash2, GitCompare } from "lucide-react";
-import type { AnalysisEntry } from "./hooks/useAnalysisHistory";
-        main
 
 const PAGE_SIZE = 10
 
