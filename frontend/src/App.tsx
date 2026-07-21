@@ -3,6 +3,7 @@ import axios from "axios";
 import "./index.css";
 import { AtsScore } from "./AtsScore";
 import { useAnalysisHistory, type AnalysisEntry } from "./hooks/useAnalysisHistory";
+import { useTagFilter } from "./hooks/useTagFilter";
 import { HistorySidebar } from "./HistorySidebar";
 import { useAuth } from "./hooks/useAuth";
 import { AuthModal } from "./AuthModal";
@@ -260,6 +261,8 @@ function App() {
   const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
   const [resumeUrl, setResumeUrl] = useState<string>("");
   const [urlError, setUrlError] = useState<string | null>(null);
+  const [undoState, setUndoState] = useState<any | null>(null);
+  const [showUndoToast, setShowUndoToast] = useState(false);
 
   let currentStep: 1 | 2 | 3 = 1;
   if (loading) {
@@ -271,7 +274,8 @@ function App() {
   const { user, signup, login, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  const { entries, addEntry, deleteEntry, clearHistory, setEntries } = useAnalysisHistory();
+  const { entries, addEntry, deleteEntry, updateTag, clearHistory, setEntries } = useAnalysisHistory();
+  const { activeTag, setActiveTag, availableTags, filteredEntries } = useTagFilter(entries);
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
 
@@ -667,10 +671,15 @@ function App() {
     <>
       <OnboardingTour />
       <HistorySidebar
-        entries={entries}
+        entries={filteredEntries}
+        allEntriesCount={entries.length}
+        availableTags={availableTags}
+        activeTag={activeTag}
+        onSelectTag={setActiveTag}
         activeFileName={activeFileName}
         onSelect={selectHistoryEntry}
         onDelete={handleDeleteEntry}
+        onUpdateTag={updateTag}
         onClear={handleClearAll}
         isOpen={historyOpen}
         onToggle={() => setHistoryOpen((v) => !v)}
