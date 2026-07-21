@@ -26,6 +26,8 @@ describe('Unified Floating Action Buttons (#247)', () => {
     render(
       <HistorySidebar
         entries={mockEntries}
+        unreadCount={1}
+        lastViewedTimestamp={0}
         isOpen={false}
         onToggle={handleToggle}
         onSelect={() => {}}
@@ -35,14 +37,13 @@ describe('Unified Floating Action Buttons (#247)', () => {
     )
 
     const historyFab = screen.getByRole('button', {
-      name: /open history/i,
+      name: /notifications and analysis history/i,
     })
 
     expect(historyFab).toBeInTheDocument()
     expect(historyFab).toHaveClass('fab-btn')
     expect(historyFab).toHaveClass('history-toggle-btn')
     expect(historyFab).toHaveAttribute('aria-expanded', 'false')
-    expect(historyFab).toHaveAttribute('title', 'View history')
 
     fireEvent.click(historyFab)
     expect(handleToggle).toHaveBeenCalledTimes(1)
@@ -52,6 +53,8 @@ describe('Unified Floating Action Buttons (#247)', () => {
     render(
       <HistorySidebar
         entries={mockEntries}
+        unreadCount={0}
+        lastViewedTimestamp={2000}
         isOpen={true}
         onToggle={() => {}}
         onSelect={() => {}}
@@ -61,12 +64,11 @@ describe('Unified Floating Action Buttons (#247)', () => {
     )
 
     const historyFab = screen.getByRole('button', {
-      name: /close history/i,
+      name: /close notifications and history/i,
     })
 
     expect(historyFab).toBeInTheDocument()
     expect(historyFab).toHaveClass('fab-btn')
     expect(historyFab).toHaveAttribute('aria-expanded', 'true')
-    expect(historyFab).toHaveAttribute('title', 'Close history')
   })
 })
