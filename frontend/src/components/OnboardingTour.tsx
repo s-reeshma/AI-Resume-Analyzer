@@ -135,7 +135,7 @@ export const OnboardingTour: React.FC = () => {
     setIsVisible(false)
   }
 
-  const nextStep = () => {
+const nextStep = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1)
     } else {
