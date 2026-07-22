@@ -941,10 +941,9 @@ function App() {
                           fontSize: '0.85rem',
                           fontWeight: '600',
                           cursor: 'pointer',
-                          background:
-                            uploadMode === 'file' ? '#6366f1' : 'rgba(255, 255, 255, 0.05)',
-                          color: '#fff',
-                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          background: uploadMode === 'file' ? '#6366f1' : 'rgba(0, 0, 0, 0.05)',
+                          color: uploadMode === 'file' ? '#fff' : (theme === 'light' ? '#1e293b' : 'rgba(255, 255, 255, 0.6)'),
+                          border: '1px solid rgba(0, 0, 0, 0.1)',
                           transition: 'all 0.2s ease',
                         }}
                       >
@@ -962,10 +961,9 @@ function App() {
                           fontSize: '0.85rem',
                           fontWeight: '600',
                           cursor: 'pointer',
-                          background:
-                            uploadMode === 'url' ? '#6366f1' : 'rgba(255, 255, 255, 0.05)',
-                          color: '#fff',
-                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          background: uploadMode === 'url' ? '#6366f1' : 'rgba(0, 0, 0, 0.05)',
+                          color: uploadMode === 'url' ? '#fff' : (theme === 'light' ? '#1e293b' : 'rgba(255, 255, 255, 0.6)'),
+                          border: '1px solid rgba(0, 0, 0, 0.1)',
                           transition: 'all 0.2s ease',
                         }}
                       >
