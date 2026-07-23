@@ -1,14 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
-import NotFound from './components/NotFound'
 import axios from 'axios'
 import './index.css'
 import { AtsScore } from './AtsScore'
 import { useAnalysisHistory, type AnalysisEntry } from './hooks/useAnalysisHistory'
-import { HistorySidebar } from './HistorySidebar'
 import { useAuth } from './hooks/useAuth'
-import { AuthModal } from './AuthModal'
-import { AccountSettingsModal } from './components/AccountSettingsModal'
 import { Footer } from './Footer'
 import AnalysisSkeleton from './components/AnalysisSkeleton/AnalysisSkeleton'
 import { InfoTooltip } from './components/InfoTooltip'
@@ -33,7 +29,6 @@ import { CuratedTips } from './components/CuratedTips'
 import { StepProgress } from './components/StepProgress'
 import { OnboardingTour } from './components/OnboardingTour'
 import { HowItWorks } from './components/HowItWorks'
-import { CompareVersions } from './components/CompareVersions/CompareVersions'
 import { SkillChip } from './components/SkillChip'
 import {
   requestNotificationPermission,
@@ -42,6 +37,26 @@ import {
 import { ProgressBar } from './components/ProgressBar/ProgressBar'
 import { UndoToast } from './components/UndoToast/UndoToast'
 import { FilePreview } from './components/FilePreview/FilePreview'
+
+const NotFound = React.lazy(() => import('./components/NotFound'))
+const HistorySidebar = React.lazy(() =>
+  import('./HistorySidebar').then((m) => ({ default: m.HistorySidebar }))
+)
+const AuthModal = React.lazy(() =>
+  import('./AuthModal').then((m) => ({ default: m.AuthModal }))
+)
+const AccountSettingsModal = React.lazy(() =>
+  import('./components/AccountSettingsModal').then((m) => ({ default: m.AccountSettingsModal }))
+)
+const CompareVersions = React.lazy(() =>
+  import('./components/CompareVersions/CompareVersions').then((m) => ({ default: m.CompareVersions }))
+)
+
+const FallbackLoader = () => (
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60px', padding: '16px' }}>
+    <Loader2 className="spin" size={24} style={{ color: 'var(--color-primary)' }} />
+  </div>
+)
 type Theme = 'light' | 'dark'
 
 interface UndoState {
@@ -820,27 +835,29 @@ function App() {
         Skip to main content
       </a>
       <OnboardingTour />
-      <HistorySidebar
-        entries={entries}
-        unreadCount={unreadCount}
-        lastViewedTimestamp={lastViewedTimestamp}
-        onMarkAllAsViewed={markAllAsViewed}
-        activeFileName={activeFileName}
-        onSelect={selectHistoryEntry}
-        onDelete={handleDeleteEntry}
-        onClear={handleClearAll}
-        isOpen={historyOpen}
-        onToggle={() => setHistoryOpen((v) => !v)}
-        onCompare={() => setCompareOpen(true)}
-      />
-
-      {compareOpen && (
-        <CompareVersions
+      <Suspense fallback={null}>
+        <HistorySidebar
           entries={entries}
-          token={user?.token}
-          onClose={() => setCompareOpen(false)}
+          unreadCount={unreadCount}
+          lastViewedTimestamp={lastViewedTimestamp}
+          onMarkAllAsViewed={markAllAsViewed}
+          activeFileName={activeFileName}
+          onSelect={selectHistoryEntry}
+          onDelete={handleDeleteEntry}
+          onClear={handleClearAll}
+          isOpen={historyOpen}
+          onToggle={() => setHistoryOpen((v) => !v)}
+          onCompare={() => setCompareOpen(true)}
         />
-      )}
+
+        {compareOpen && (
+          <CompareVersions
+            entries={entries}
+            token={user?.token}
+            onClose={() => setCompareOpen(false)}
+          />
+        )}
+      </Suspense>
 
       <Navbar
         theme={theme}
@@ -857,19 +874,23 @@ function App() {
           element={
             <main id="main-content" className="landing-page">
               {showAuthModal && (
-                <AuthModal
-                  onSignup={signup}
-                  onLogin={login}
-                  onClose={() => setShowAuthModal(false)}
-                />
+                <Suspense fallback={null}>
+                  <AuthModal
+                    onSignup={signup}
+                    onLogin={login}
+                    onClose={() => setShowAuthModal(false)}
+                  />
+                </Suspense>
               )}
 
               {showSettingsModal && (
-                <AccountSettingsModal
-                  user={user}
-                  onClose={() => setShowSettingsModal(false)}
-                  onDeleteSuccess={handleLogout}
-                />
+                <Suspense fallback={null}>
+                  <AccountSettingsModal
+                    user={user}
+                    onClose={() => setShowSettingsModal(false)}
+                    onDeleteSuccess={handleLogout}
+                  />
+                </Suspense>
               )}
 
               <div className={score === null && !loading ? 'hero-container' : ''}>
@@ -1632,7 +1653,14 @@ function App() {
             </main>
           }
         />
-        <Route path="*" element={<NotFound />} />
+        <Route
+          path="*"
+          element={
+            <Suspense fallback={<FallbackLoader />}>
+              <NotFound />
+            </Suspense>
+          }
+        />
       </Routes>
       {/* Floating Back to Top Button */}
       <button
