@@ -8,6 +8,7 @@ interface NavbarProps {
   onLogin: () => void
   onLogout: () => void
   onHistoryClick: () => void
+  onSettingsClick: () => void
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -17,6 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLogin,
   onLogout,
   onHistoryClick,
+  onSettingsClick,
 }) => {
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -92,6 +94,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           {user ? (
             <div className="navbar-user">
               <span className="auth-username">👤 {user.username}</span>
+              <button
+                className="auth-bar-btn"
+                onClick={() => {
+                  onSettingsClick()
+                  setMobileOpen(false)
+                }}
+                title="Account Settings"
+              >
+                ⚙️ Settings
+              </button>
               <button
                 className="auth-bar-btn"
                 onClick={() => {

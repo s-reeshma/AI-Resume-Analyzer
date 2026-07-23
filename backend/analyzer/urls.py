@@ -13,6 +13,7 @@ from .views import (
     compare_versions_view,
     suggestion_feedback,
     health_check,
+    delete_account,
 )
 
 urlpatterns = [
@@ -22,6 +23,7 @@ urlpatterns = [
     path("auth/signup/", signup),
     path("auth/login/", TokenObtainPairView.as_view()),
     path("auth/refresh/", TokenRefreshView.as_view()),
+    path("auth/delete-account/", delete_account),
 
     path("history/", analysis_history),
     path("history/clear/", clear_user_history),

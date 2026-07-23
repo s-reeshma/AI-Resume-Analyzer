@@ -8,6 +8,7 @@ import { useAnalysisHistory, type AnalysisEntry } from "./hooks/useAnalysisHisto
 import { HistorySidebar } from "./HistorySidebar";
 import { useAuth } from "./hooks/useAuth";
 import { AuthModal } from "./AuthModal";
+import { AccountSettingsModal } from "./components/AccountSettingsModal";
 import { Footer } from "./Footer";
 import AnalysisSkeleton from "./components/AnalysisSkeleton/AnalysisSkeleton";
 import { InfoTooltip } from "./components/InfoTooltip";
@@ -276,6 +277,7 @@ function App() {
 
   const { user, signup, login, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const { entries, unreadCount, lastViewedTimestamp, markAllAsViewed, addEntry, deleteEntry, clearHistory, setEntries } = useAnalysisHistory();
 
@@ -751,6 +753,7 @@ function App() {
         onLogin={() => setShowAuthModal(true)}
         onLogout={handleLogout}
         onHistoryClick={() => setHistoryOpen(true)}
+        onSettingsClick={() => setShowSettingsModal(true)}
       />
       <Routes>
         <Route path="/" element={
@@ -760,6 +763,14 @@ function App() {
                 onSignup={signup}
                 onLogin={login}
                 onClose={() => setShowAuthModal(false)}
+              />
+            )}
+
+            {showSettingsModal && (
+              <AccountSettingsModal
+                user={user}
+                onClose={() => setShowSettingsModal(false)}
+                onDeleteSuccess={handleLogout}
               />
             )}
 

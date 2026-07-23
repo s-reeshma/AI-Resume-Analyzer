@@ -286,6 +286,36 @@ class UrlFetcherTests(TestCase):
         with self.assertRaises(ValueError) as ctx:
             download_and_validate_url("ftp://example.com/file.pdf")
         self.assertIn("valid URL starting with http", str(ctx.exception))
+from django.contrib.auth.models import User
+from django.urls import reverse
+from rest_framework.test import APIClient
+from unittest.mock import patch
+from types import SimpleNamespace
+from django.test import TestCase
+
+from analyzer.comparison import compare_versions
+from analyzer.models import ResumeAnalysis
+from analyzer.services import analyze_resume
+from analyzer.url_fetcher import convert_to_direct_download_url, download_and_validate_url
+
+
+def _fake_pdf(text):
+    return SimpleNamespace(pages=[SimpleNamespace(extract_text=lambda: text)])
+
+
+def _make_analysis(user, **overrides):
+    defaults = dict(
+        file_name="resume.pdf",
+        score=50,
+        skills_found=["python", "sql"],
+        suggestions=[],
+        matched_skills=["python"],
+        missing_skills=["react"],
+        target_role="Backend Developer",
+        resume_text="Python developer\nWorked with SQL",
+    )
+    defaults.update(overrides)
+    return ResumeAnalysis.objects.create(user=user, **defaults)
 
 
 class HealthCheckTests(TestCase):
@@ -308,3 +338,50 @@ class HealthCheckTests(TestCase):
         self.assertEqual(resp.data["status"], "unhealthy")
         self.assertEqual(resp.data["services"]["database"], "down")
         self.assertIn("Database is down", resp.data["error"])
+
+
+class DeleteAccountTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.username = "testuser"
+        self.password = "validpassword123"
+        self.user = User.objects.create_user(username=self.username, password=self.password)
+        
+        # Create some resume analyses to verify cascade deletion
+        _make_analysis(self.user, score=60, file_name="resume1.pdf")
+        _make_analysis(self.user, score=80, file_name="resume2.pdf")
+
+    def test_delete_account_requires_authentication(self):
+        resp = self.client.delete("/api/auth/delete-account/", {"password": self.password, "confirm_text": "DELETE"}, format="json")
+        self.assertEqual(resp.status_code, 401)
+        self.assertTrue(User.objects.filter(username=self.username).exists())
+
+    def test_delete_account_incorrect_password(self):
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.delete("/api/auth/delete-account/", {"password": "wrongpassword", "confirm_text": "DELETE"}, format="json")
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("Incorrect password", resp.data["error"])
+        self.assertTrue(User.objects.filter(username=self.username).exists())
+
+    def test_delete_account_incorrect_confirm_text(self):
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.delete("/api/auth/delete-account/", {"password": self.password, "confirm_text": "DELET"}, format="json")
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("type 'DELETE' exactly", resp.data["error"])
+        self.assertTrue(User.objects.filter(username=self.username).exists())
+
+    def test_delete_account_success(self):
+        self.client.force_authenticate(user=self.user)
+        
+        # Check that the analyses exist beforehand
+        self.assertEqual(ResumeAnalysis.objects.filter(user=self.user).count(), 2)
+        
+        resp = self.client.delete("/api/auth/delete-account/", {"password": self.password, "confirm_text": "DELETE"}, format="json")
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("permanently deleted", resp.data["detail"])
+        
+        # Check that user is deleted from the database
+        self.assertFalse(User.objects.filter(username=self.username).exists())
+        
+        # Check cascade deletion: related analyses must be deleted too
+        self.assertEqual(ResumeAnalysis.objects.filter(user_id=self.user.id).count(), 0)

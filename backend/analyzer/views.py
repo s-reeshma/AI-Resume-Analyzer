@@ -239,4 +239,43 @@ def health_check(request):
         health_status["error"] = str(e)
         return Response(
             health_status, status=status.HTTP_503_SERVICE_UNAVAILABLE
-        )
+        )
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_account(request):
+    """Permanently delete the authenticated user's account and all associated data.
+
+    Requires password verification and confirmation text.
+    """
+    password = request.data.get("password")
+    confirm_text = request.data.get("confirm_text")
+
+    if not password:
+        return Response(
+            {"error": "Password is required to confirm account deletion."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if confirm_text != "DELETE":
+        return Response(
+            {"error": "Please type 'DELETE' exactly to confirm your intent."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    user = request.user
+    if not user.check_password(password):
+        return Response(
+            {"error": "Incorrect password. Account deletion aborted."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Permanently delete the user (triggers CASCADE on ResumeAnalysis)
+    user.delete()
+
+    return Response(
+        {"detail": "Your account and all associated data have been permanently deleted."},
+        status=status.HTTP_200_OK,
+    )
+
