@@ -651,9 +651,20 @@ function App() {
         }
       }
       if (!(axios.isAxiosError(error) && error.response?.status === 429)) {
-        alert(
-          source === 'sample' ? `Sample analysis failed: ${errorMsg}` : `Upload failed: ${errorMsg}`
-        )
+        if (
+          axios.isAxiosError(error) &&
+          error.response?.status === 400 &&
+          uploadMode === 'url' &&
+          source === 'upload'
+        ) {
+          setUrlError(errorMsg)
+        } else {
+          alert(
+            source === 'sample'
+              ? `Sample analysis failed: ${errorMsg}`
+              : `Upload failed: ${errorMsg}`
+          )
+        }
       }
 
       setLoading(false)
@@ -688,7 +699,13 @@ function App() {
         setUrlError('URL must start with http:// or https://')
         hasError = true
       } else {
-        setUrlError(null)
+        try {
+          new URL(resumeUrl.trim())
+          setUrlError(null)
+        } catch {
+          setUrlError('Please enter a valid URL.')
+          hasError = true
+        }
       }
     }
 
@@ -996,79 +1013,78 @@ function App() {
                         >
                           🔗 Import via Link
                         </button>
-
-                    </div>
-
-                    {uploadMode === 'file' ? (
-                      <div
-                        className={`upload-box mb-3 ${isDragging ? 'dragging' : ''}`}
-                        style={{ width: '100%', maxWidth: '100%' }}
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}
-                        onDrop={handleDrop}
-                      >
-                        <input
-                          type="file"
-                          id="fileUpload"
-                          hidden
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                            if (e.target.files && e.target.files[0]) {
-                              setFile(e.target.files[0])
-                              setFileError(null)
-                            }
-                          }}
-                        />
-                        <label htmlFor="fileUpload" className="upload-label">
-                          <div className="upload-icon-wrapper" aria-hidden="true">
-                            {file ? (
-                              <svg
-                                width="28"
-                                height="28"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                                <polyline points="14 2 14 8 20 8" />
-                                <path d="M9 15l2 2 4-4" />
-                              </svg>
-                            ) : (
-                              <svg
-                                width="28"
-                                height="28"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                <polyline points="17 8 12 3 7 8" />
-                                <line x1="12" y1="3" x2="12" y2="15" />
-                              </svg>
-                            )}
-                          </div>
-                          <div style={{ textAlign: 'center' }}>
-                            {file ? (
-                              <strong className="upload-file-name">{file.name}</strong>
-                            ) : (
-                              <>
-                                <span className="upload-text-primary">
-                                  Drag &amp; Drop Resume or{' '}
-                                  <span className="upload-text-browse">Click to Browse</span>
-                                </span>
-                                <span className="upload-text-secondary">
-                                  Supports PDF, DOCX, TXT up to 10MB
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </label>
                       </div>
+
+                      {uploadMode === 'file' ? (
+                        <div
+                          className={`upload-box mb-3 ${isDragging ? 'dragging' : ''}`}
+                          style={{ width: '100%', maxWidth: '100%' }}
+                          onDragOver={handleDragOver}
+                          onDragLeave={handleDragLeave}
+                          onDrop={handleDrop}
+                        >
+                          <input
+                            type="file"
+                            id="fileUpload"
+                            hidden
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                              if (e.target.files && e.target.files[0]) {
+                                setFile(e.target.files[0])
+                                setFileError(null)
+                              }
+                            }}
+                          />
+                          <label htmlFor="fileUpload" className="upload-label">
+                            <div className="upload-icon-wrapper" aria-hidden="true">
+                              {file ? (
+                                <svg
+                                  width="28"
+                                  height="28"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                                  <polyline points="14 2 14 8 20 8" />
+                                  <path d="M9 15l2 2 4-4" />
+                                </svg>
+                              ) : (
+                                <svg
+                                  width="28"
+                                  height="28"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                  <polyline points="17 8 12 3 7 8" />
+                                  <line x1="12" y1="3" x2="12" y2="15" />
+                                </svg>
+                              )}
+                            </div>
+                            <div style={{ textAlign: 'center' }}>
+                              {file ? (
+                                <strong className="upload-file-name">{file.name}</strong>
+                              ) : (
+                                <>
+                                  <span className="upload-text-primary">
+                                    Drag &amp; Drop Resume or{' '}
+                                    <span className="upload-text-browse">Click to Browse</span>
+                                  </span>
+                                  <span className="upload-text-secondary">
+                                    Supports PDF, DOCX, TXT up to 10MB
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </label>
+                        </div>
                       ) : (
                         <div className="mb-3" style={{ textAlign: 'left' }}>
                           <label
