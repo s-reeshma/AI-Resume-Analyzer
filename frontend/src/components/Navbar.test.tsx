@@ -18,6 +18,7 @@ describe('Navbar Component (#241)', () => {
     render(<Navbar {...defaultProps} />)
     const brandElement = screen.getByText(/AI Resume Analyzer/i)
     expect(brandElement).toBeInTheDocument()
+    expect(brandElement.textContent).toContain('🚀')
   })
 
   it('renders correctly in light mode', () => {
