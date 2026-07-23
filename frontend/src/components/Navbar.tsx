@@ -44,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="navbar">
-      <div className="navbar-brand">🚀 AI Resume Analyzer</div>
+      <div style={{ color: theme === 'light' ? '#000000' : '#ffffff' }}>🚀 AI Resume Analyzer</div>
 
       <button
         className="navbar-toggle"

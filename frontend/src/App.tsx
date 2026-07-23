@@ -44,7 +44,7 @@ interface UndoState {
   score: number | null
   skills: string[]
   suggestions: string[]
-  matchedSkills: string[]
+  matchedSkills: string[]   
   missingSkills: string[]
   resumeText: string
   analysisSource: 'sample' | 'upload' | null
@@ -145,7 +145,7 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({ text, index, backendUrl
             style={{
               fontSize: '12px',
               fontWeight: '700',
-              color: '#a5b4fc',
+              color: 'var(--color-primary)',
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
             }}
@@ -157,7 +157,7 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({ text, index, backendUrl
           style={{
             margin: 0,
             fontSize: 'var(--font-size-sm)',
-            color: '#e2e8f0',
+            color: 'var(--body-text)',
             lineHeight: '1.6',
           }}
         >
@@ -172,7 +172,7 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({ text, index, backendUrl
           justifyContent: 'space-between',
           marginTop: '16px',
           paddingTop: '12px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+          borderTop: '1px solid var(--surface-border)',
           gap: '8px',
           flexWrap: 'wrap',
         }}
@@ -184,7 +184,7 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({ text, index, backendUrl
               <span
                 style={{
                   fontSize: '0.78rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
+                  color: 'var(--muted-text)',
                   fontWeight: '500',
                 }}
               >
@@ -197,12 +197,12 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({ text, index, backendUrl
                 title="Helpful"
                 aria-label="Vote helpful"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  background: 'var(--surface-soft-bg)',
+                  border: '1px solid var(--surface-border)',
                   borderRadius: 'var(--radius-sm)',
                   padding: '4px 8px',
                   cursor: 'pointer',
-                  color: '#fff',
+                  color: 'var(--body-text)',
                   fontSize: '0.85rem',
                   transition: 'all 0.2s ease',
                 }}
@@ -216,12 +216,12 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({ text, index, backendUrl
                 title="Not helpful"
                 aria-label="Vote not helpful"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  background: 'var(--surface-soft-bg)',
+                  border: '1px solid var(--surface-border)',
                   borderRadius: 'var(--radius-sm)',
                   padding: '4px 8px',
                   cursor: 'pointer',
-                  color: '#fff',
+                  color: 'var(--body-text)',
                   fontSize: '0.85rem',
                   transition: 'all 0.2s ease',
                 }}
@@ -847,7 +847,7 @@ function App() {
                         compatibility and receive personalized recommendations in seconds.
                       </p>
 
-                      <div className="hero-stats">
+                      <div className="hero-stats" style={{ color: theme === 'light' ? '#000000' : '#ffffff' }}>
                         <div>
                           <h2>50K+</h2>
                           <span>Resumes Reviewed</span>
@@ -881,10 +881,11 @@ function App() {
                       <label
                         htmlFor="roleSelect"
                         style={{
+                          color: theme === 'light' ? '#000000' : '#ffffff',
                           display: 'block',
                           marginBottom: '12px',
                           fontWeight: '600',
-                          color: '#e2e8f0',
+                          textAlign: 'center',
                           fontSize: 'var(--font-size-sm)',
                         }}
                       >
@@ -959,13 +960,13 @@ function App() {
                             setFileError(null)
                           }}
                           style={{
-                            padding: '8px 16px',
+                             padding: '8px 16px',
                             borderRadius: 'var(--radius-md)',
                             fontSize: '0.85rem',
                             fontWeight: '600',
                             cursor: 'pointer',
                             background:
-                              uploadMode === 'url' ? '#6366f1' : 'rgba(255, 255, 255, 0.05)',
+                              uploadMode === 'file' ? '#6366f1' : 'rgba(255, 255, 255, 0.05)',
                             color: '#fff',
                             border: '1px solid rgba(255, 255, 255, 0.15)',
                             transition: 'all 0.2s ease',
@@ -1091,10 +1092,11 @@ function App() {
                         <label
                           htmlFor="jobDescription"
                           style={{
+                            color: 'var(--text-primary)',
                             fontWeight: '600',
                             display: 'block',
                             marginBottom: '8px',
-                            color: '#e2e8f0',
+                            
                           }}
                         >
                           Job Description (Optional)
@@ -1385,8 +1387,8 @@ function App() {
                                   top: '100%',
                                   right: 0,
                                   marginTop: '4px',
-                                  backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-                                  border: `1px solid ${theme === 'dark' ? '#374151' : '#e5e7eb'}`,
+                                  backgroundColor: 'var(--card-bg)',
+                                  border: '1px solid var(--surface-border)',
                                   borderRadius: '6px',
                                   boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                                   zIndex: 10,
@@ -1403,10 +1405,10 @@ function App() {
                                     padding: '8px 12px',
                                     background: 'transparent',
                                     border: 'none',
-                                    color: theme === 'dark' ? '#f3f4f6' : '#111827',
+                                    color: 'var(--body-text)',
                                     textAlign: 'left',
                                     cursor: 'pointer',
-                                    borderBottom: `1px solid ${theme === 'dark' ? '#374151' : '#e5e7eb'}`,
+                                    borderBottom: '1px solid var(--surface-border)',
                                   }}
                                 >
                                   Export JSON
@@ -1418,7 +1420,7 @@ function App() {
                                     padding: '8px 12px',
                                     background: 'transparent',
                                     border: 'none',
-                                    color: theme === 'dark' ? '#f3f4f6' : '#111827',
+                                    color: 'var(--body-text)',
                                     textAlign: 'left',
                                     cursor: 'pointer',
                                   }}
